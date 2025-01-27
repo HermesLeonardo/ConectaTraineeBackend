@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/usuarios")  // 🔹 definindo a rota correta
+@RequestMapping("/api/usuarios")  // definindo a rota correta
 public class UsuarioController {
 
     @Autowired
