@@ -1,6 +1,7 @@
 package com.Trainee.ConectaTraineeBackend.service;
 
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
+
 import java.util.List;
 import java.util.Optional;
 
