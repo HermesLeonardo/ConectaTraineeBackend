@@ -9,37 +9,37 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
-import com.Trainee.ConectaTraineeBackend.service.ProjetosService;
-import com.Trainee.ConectaTraineeBackend.model.Projetos;
+import com.Trainee.ConectaTraineeBackend.service.ProjetoService;
+import com.Trainee.ConectaTraineeBackend.model.Projeto;
 
 @RestController
-@RequestMapping("/api/projetos") // Definindo a rota para projetos
-public class ProjetosController {
+@RequestMapping("/api/projetos")
+public class ProjetoController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProjetosController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProjetoController.class);
 
     @Autowired
-    private ProjetosService projetosService;
+    private ProjetoService projetoService;
 
     @GetMapping
-    public ResponseEntity<List<Projetos>> listarTodos() {
+    public ResponseEntity<List<Projeto>> listarTodos() {
         logger.info("Listando todos os projetos.");
-        List<Projetos> projetos = projetosService.listarTodos();
+        List<Projeto> projetos = projetoService.listarTodos();
         return ResponseEntity.ok(projetos);
     }
 
     @PostMapping
-    public ResponseEntity<Projetos> criarProjeto(@RequestBody Projetos projetos) {
-        logger.info("Criando novo projeto: {}", projetos.getNome());
-        Projetos novoProjeto = projetosService.salvarProjeto(projetos);
+    public ResponseEntity<Projeto> criarProjeto(@RequestBody Projeto projeto) {
+        logger.info("Criando novo projeto: {}", projeto.getNome());
+        Projeto novoProjeto = projetoService.salvarProjeto(projeto);
         logger.info("Projeto criado com sucesso: ID {}", novoProjeto.getId());
         return ResponseEntity.ok(novoProjeto);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Projetos> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<Projeto> buscarPorId(@PathVariable Long id) {
         logger.info("Buscando projeto com ID: {}", id);
-        Optional<Projetos> projeto = projetosService.buscarPorId(id);
+        Optional<Projeto> projeto = projetoService.buscarPorId(id);
         return projeto.map(ResponseEntity::ok)
                 .orElseGet(() -> {
                     logger.warn("Projeto com ID {} não encontrado.", id);
@@ -50,7 +50,7 @@ public class ProjetosController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarProjeto(@PathVariable Long id) {
         logger.info("Deletando projeto com ID: {}", id);
-        projetosService.deletarProjeto(id);
+        projetoService.deletarProjeto(id);
         return ResponseEntity.noContent().build();
     }
 }

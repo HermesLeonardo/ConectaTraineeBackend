@@ -39,3 +39,57 @@ VALUES ('Projeto Exemplo',
         'PLANEJADO',
         1,
         'ALTA');
+
+
+
+-- Criar tabela atividades
+CREATE TABLE IF NOT EXISTS atividades (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_projeto BIGINT NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    descricao TEXT,
+    data_inicio DATETIME NOT NULL,
+    data_fim DATETIME NOT NULL,
+    status ENUM('ABERTA', 'EM_ANDAMENTO', 'CONCLUIDA', 'PAUSADA') NOT NULL,
+    id_usuario_responsavel BIGINT NOT NULL,
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_projeto) REFERENCES projetos(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_responsavel) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+INSERT INTO atividades (id_projeto, nome, descricao, data_inicio, data_fim, status, id_usuario_responsavel, data_criacao)
+VALUES (
+    1, -- ID do projeto existente
+    'Atividade Exemplo',
+    'Esta é uma atividade de teste dentro de um projeto.',
+    NOW(),
+    DATE_ADD(NOW(), INTERVAL 7 DAY),
+    'EM_ANDAMENTO',
+    1, -- ID de um usuário existente
+    NOW()
+);
+
+
+
+-- Criar tabela lancamentos_horas
+CREATE TABLE IF NOT EXISTS lancamentos_horas (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_atividade BIGINT NOT NULL,
+    id_usuario BIGINT NOT NULL,
+    descricao TEXT NOT NULL,
+    data_inicio DATETIME NOT NULL,
+    data_fim DATETIME NOT NULL,
+    data_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_atividade) REFERENCES atividades(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+INSERT INTO lancamentos_horas (id_atividade, id_usuario, descricao, data_inicio, data_fim, data_registro)
+VALUES (
+    1, -- ID de uma atividade existente
+    1, -- ID de um usuário existente
+    'Trabalho realizado na atividade de teste.',
+    NOW(),
+    DATE_ADD(NOW(), INTERVAL 3 HOUR),
+    NOW()
+);

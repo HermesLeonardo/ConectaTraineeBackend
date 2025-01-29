@@ -20,7 +20,7 @@ public class Usuario {
     private String email;
 
     @Column(nullable = false)
-    private String senha; // Aqui podemos armazenar como hash futuramente
+    private String senha; // Aqui armazenar como hash futuramente
 
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao;

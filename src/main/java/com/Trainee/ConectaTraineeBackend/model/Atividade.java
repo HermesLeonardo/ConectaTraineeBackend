@@ -1,18 +1,20 @@
 package com.Trainee.ConectaTraineeBackend.model;
 
+import com.Trainee.ConectaTraineeBackend.enums.StatusAtividade;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-import com.Trainee.ConectaTraineeBackend.enums.StatusProjeto;
-import com.Trainee.ConectaTraineeBackend.enums.PrioridadeProjeto;
-
 @Entity
-@Table(name = "projetos")
-public class Projetos {
+@Table(name = "atividades")
+public class Atividade {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "id_projeto", nullable = false)
+    private Projeto projeto;
 
     @Column(nullable = false, length = 100)
     private String nome;
@@ -28,11 +30,7 @@ public class Projetos {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StatusProjeto status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PrioridadeProjeto prioridade;
+    private StatusAtividade status;
 
     @ManyToOne
     @JoinColumn(name = "id_usuario_responsavel", nullable = false)
@@ -42,13 +40,20 @@ public class Projetos {
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
     // Getters e Setters
-
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Projeto getProjeto() {
+        return projeto;
+    }
+
+    public void setProjeto(Projeto projeto) {
+        this.projeto = projeto;
     }
 
     public String getNome() {
@@ -83,20 +88,12 @@ public class Projetos {
         this.dataFim = dataFim;
     }
 
-    public StatusProjeto getStatus() {
+    public StatusAtividade getStatus() {
         return status;
     }
 
-    public void setStatus(StatusProjeto status) {
+    public void setStatus(StatusAtividade status) {
         this.status = status;
-    }
-
-    public PrioridadeProjeto getPrioridade() {
-        return prioridade;
-    }
-
-    public void setPrioridade(PrioridadeProjeto prioridade) {
-        this.prioridade = prioridade;
     }
 
     public Usuario getUsuarioResponsavel() {

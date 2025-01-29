@@ -1,8 +1,8 @@
 package com.Trainee.ConectaTraineeBackend.service.impl;
 
-import com.Trainee.ConectaTraineeBackend.model.Projetos;
-import com.Trainee.ConectaTraineeBackend.repository.ProjetosRepository;
-import com.Trainee.ConectaTraineeBackend.service.ProjetosService;
+import com.Trainee.ConectaTraineeBackend.model.Projeto;
+import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
+import com.Trainee.ConectaTraineeBackend.service.ProjetoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,18 +11,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ProjetosServiceImpl implements ProjetosService {
+public class ProjetoServiceImpl implements ProjetoService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProjetosServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProjetoServiceImpl.class);
 
     @Autowired
-    private ProjetosRepository projetosRepository;
+    private ProjetoRepository projetoRepository;
 
     @Override
-    public Projetos salvarProjeto(Projetos projetos) {
-        logger.info("Salvando projeto: {}", projetos.getNome());
+    public Projeto salvarProjeto(Projeto projeto) {
+        logger.info("Salvando projeto: {}", projeto.getNome());
         try {
-            return projetosRepository.save(projetos);
+            return projetoRepository.save(projeto);
         } catch (Exception e) {
             logger.error("Erro ao salvar projeto: {}", e.getMessage());
             throw new RuntimeException("Erro ao salvar projeto", e);
@@ -30,20 +30,20 @@ public class ProjetosServiceImpl implements ProjetosService {
     }
 
     @Override
-    public Optional<Projetos> buscarPorId(Long id) {
+    public Optional<Projeto> buscarPorId(Long id) {
         logger.info("Buscando projeto com ID: {}", id);
-        return projetosRepository.findById(id);
+        return projetoRepository.findById(id);
     }
 
     @Override
-    public List<Projetos> listarTodos() {
+    public List<Projeto> listarTodos() {
         logger.info("Listando todos os projetos cadastrados.");
-        return projetosRepository.findAll();
+        return projetoRepository.findAll();
     }
 
     @Override
     public void deletarProjeto(Long id) {
         logger.info("Deletando projeto com ID: {}", id);
-        projetosRepository.deleteById(id);
+        projetoRepository.deleteById(id);
     }
 }
