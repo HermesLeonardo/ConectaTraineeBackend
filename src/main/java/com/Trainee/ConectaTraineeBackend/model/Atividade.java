@@ -39,7 +39,19 @@ public class Atividade {
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
-    // Getters e Setters
+    public Atividade() {}
+
+    public Atividade(Projeto projeto, String nome, String descricao, LocalDateTime dataInicio, LocalDateTime dataFim, StatusAtividade status, Usuario usuarioResponsavel) {
+        this.projeto = projeto;
+        this.nome = nome;
+        this.descricao = descricao;
+        this.dataInicio = dataInicio;
+        this.dataFim = dataFim;
+        this.status = status;
+        this.usuarioResponsavel = usuarioResponsavel;
+        this.dataCriacao = LocalDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }

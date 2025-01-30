@@ -34,17 +34,30 @@ public class Projeto {
     @Column(nullable = false)
     private PrioridadeProjeto prioridade;
 
+    // Se quisermos manter um responsável principal para o projeto:
     @ManyToOne
-    @JoinColumn(name = "id_usuario_responsavel", nullable = false)
+    @JoinColumn(name = "id_usuario_responsavel", nullable = true) // Agora pode ser opcional
     private Usuario usuarioResponsavel;
 
+    // Relacionamento com usuários do projeto (M:N)
     @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Atividade> atividades;
+    private List<ProjetoUsuario> usuariosProjeto;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
-    // Getters e Setters
+
+    public Projeto() {}
+
+    public Projeto(String nome, String descricao, LocalDateTime dataInicio, LocalDateTime dataFim, StatusProjeto status, PrioridadeProjeto prioridade) {
+        this.nome = nome;
+        this.descricao = descricao;
+        this.dataInicio = dataInicio;
+        this.dataFim = dataFim;
+        this.status = status;
+        this.prioridade = prioridade;
+        this.dataCriacao = LocalDateTime.now();
+    }
 
     public Long getId() {
         return id;

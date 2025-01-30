@@ -23,7 +23,7 @@ public class Usuario {
     private String senha; // Aqui armazenar como hash futuramente
 
     @Column(name = "data_criacao", nullable = false)
-    private LocalDateTime dataCriacao;
+    private LocalDateTime dataCriacao = LocalDateTime.now();
 
     @Column(name = "ultimo_login")
     private LocalDateTime ultimoLogin;
@@ -31,7 +31,11 @@ public class Usuario {
     @Column(nullable = false)
     private String perfil; // Ex.: "ADMIN" ou "USUARIO"
 
-    // Construtor vazio (obrigatório para o JPA)
+    // Relacionamento com os projetos (M:N)
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjetoUsuario> projetosUsuario;
+
+    
     public Usuario() {
     }
 
