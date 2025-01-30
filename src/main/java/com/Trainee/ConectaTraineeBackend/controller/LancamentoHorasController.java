@@ -33,7 +33,6 @@ public class LancamentoHorasController {
     @Autowired
     private UsuarioService usuarioService;
 
-    // ✅ **Corrigido - Criar um novo lançamento de horas**
     @PostMapping
     public ResponseEntity<LancamentoHoras> registrarLancamento(@RequestBody Map<String, String> request) {
         logger.info("Registrando novo lançamento de horas.");
