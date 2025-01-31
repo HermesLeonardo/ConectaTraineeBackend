@@ -3,7 +3,7 @@ package com.Trainee.ConectaTraineeBackend.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
-
+import validator.constraints.*;
 
 @Entity
 @Table(name = "usuarios")
@@ -13,12 +13,18 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @notNull(message = "Nome é obrigatório")
+    @size(min = 3, max = 50, message = "Nome deve ter entre 3 e 50 caracteres")
     @Column(nullable = false) 
     private String nome;
 
+    @notNull(message = "Email é obrigatório")
+    @Email(message = "Email inválido")
     @Column(unique = true, nullable = false)
     private String email;
 
+    @notNull(message = "Senha é obrigatório")
+    @size(min = 6, max = 50, message = "Senha deve ter entre 6 e 50 caracteres")
     @Column(nullable = false)
     private String senha; // Aqui armazenar como hash futuramente
 

@@ -2,6 +2,8 @@ package com.Trainee.ConectaTraineeBackend.model;
 
 import com.Trainee.ConectaTraineeBackend.enums.StatusAtividade;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,6 +18,8 @@ public class Atividade {
     @JoinColumn(name = "id_projeto", nullable = false)
     private Projeto projeto;
 
+    @NotNull(message = "Nome da atividade é obrigatório")
+    @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
     @Column(nullable = false, length = 100)
     private String nome;
 
@@ -23,11 +27,12 @@ public class Atividade {
     private String descricao;
 
     @Column(nullable = false)
-    private LocalDateTime dataInicio;
+    private LocalDateTime dataInicio = LocalDateTime.now(); // ✅ Definindo automaticamente
 
-    @Column(nullable = false)
-    private LocalDateTime dataFim;
+    @Column
+    private LocalDateTime dataFim; // 🔥 Agora é opcional e será preenchido quando a atividade for concluída
 
+    @NotNull(message = "Status da atividade é obrigatório")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusAtividade status;
@@ -39,18 +44,21 @@ public class Atividade {
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
+    // ✅ Construtor vazio (necessário para o JPA)
     public Atividade() {}
 
-    public Atividade(Projeto projeto, String nome, String descricao, LocalDateTime dataInicio, LocalDateTime dataFim, StatusAtividade status, Usuario usuarioResponsavel) {
+    // ✅ Construtor principal
+    public Atividade(Projeto projeto, String nome, String descricao, StatusAtividade status, Usuario usuarioResponsavel) {
         this.projeto = projeto;
         this.nome = nome;
         this.descricao = descricao;
-        this.dataInicio = dataInicio;
-        this.dataFim = dataFim;
         this.status = status;
         this.usuarioResponsavel = usuarioResponsavel;
         this.dataCriacao = LocalDateTime.now();
+        this.dataInicio = LocalDateTime.now(); // ✅ Definindo automaticamente
     }
+
+    // ✅ Métodos Getter e Setter
 
     public Long getId() {
         return id;
@@ -88,16 +96,8 @@ public class Atividade {
         return dataInicio;
     }
 
-    public void setDataInicio(LocalDateTime dataInicio) {
-        this.dataInicio = dataInicio;
-    }
-
     public LocalDateTime getDataFim() {
         return dataFim;
-    }
-
-    public void setDataFim(LocalDateTime dataFim) {
-        this.dataFim = dataFim;
     }
 
     public StatusAtividade getStatus() {
@@ -106,6 +106,9 @@ public class Atividade {
 
     public void setStatus(StatusAtividade status) {
         this.status = status;
+        if (status == StatusAtividade.CONCLUIDA) {
+            this.dataFim = LocalDateTime.now(); //Definindo automaticamente
+        }
     }
 
     public Usuario getUsuarioResponsavel() {

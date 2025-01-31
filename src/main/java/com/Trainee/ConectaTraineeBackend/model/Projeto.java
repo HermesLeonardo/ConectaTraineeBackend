@@ -1,10 +1,13 @@
 package com.Trainee.ConectaTraineeBackend.model;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import java.util.List;
 import com.Trainee.ConectaTraineeBackend.enums.StatusProjeto;
 import com.Trainee.ConectaTraineeBackend.enums.PrioridadeProjeto;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "projetos")
@@ -14,50 +17,55 @@ public class Projeto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Nome do projeto é obrigatório")
+    @Size(min = 3, max = 50, message = "Nome deve ter entre 3 e 50 caracteres")
     @Column(nullable = false, length = 100)
     private String nome;
 
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
+    @NotNull(message = "Data de início do projeto é obrigatória")
     @Column(nullable = false)
     private LocalDateTime dataInicio;
 
-    @Column(nullable = false)
+    @Column(updatable = false) // Impede que seja alterada manualmente depois de definida
     private LocalDateTime dataFim;
 
+    @NotNull(message = "Status do projeto é obrigatório")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusProjeto status;
 
+    @NotNull(message = "Prioridade do projeto é obrigatória")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PrioridadeProjeto prioridade;
 
-    // Se quisermos manter um responsável principal para o projeto:
     @ManyToOne
-    @JoinColumn(name = "id_usuario_responsavel", nullable = true) // Agora pode ser opcional
+    @JoinColumn(name = "id_usuario_responsavel")
     private Usuario usuarioResponsavel;
 
-    // Relacionamento com usuários do projeto (M:N)
     @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjetoUsuario> usuariosProjeto;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
-
+    // ✅ Construtor padrão necessário para o JPA
     public Projeto() {}
 
-    public Projeto(String nome, String descricao, LocalDateTime dataInicio, LocalDateTime dataFim, StatusProjeto status, PrioridadeProjeto prioridade) {
+    // ✅ Construtor principal para criação de projetos
+    public Projeto(String nome, String descricao, LocalDateTime dataInicio, StatusProjeto status, PrioridadeProjeto prioridade, Usuario usuarioResponsavel) {
         this.nome = nome;
         this.descricao = descricao;
         this.dataInicio = dataInicio;
-        this.dataFim = dataFim;
         this.status = status;
         this.prioridade = prioridade;
+        this.usuarioResponsavel = usuarioResponsavel;
         this.dataCriacao = LocalDateTime.now();
     }
+
 
     public Long getId() {
         return id;
@@ -95,16 +103,16 @@ public class Projeto {
         return dataFim;
     }
 
-    public void setDataFim(LocalDateTime dataFim) {
-        this.dataFim = dataFim;
+    //Lógica para definir automaticamente a data de fim quando o status mudar para "CONCLUIDO"
+    public void setStatus(StatusProjeto status) {
+        this.status = status;
+        if (status == StatusProjeto.CONCLUIDO) {
+            this.dataFim = LocalDateTime.now();
+        }
     }
 
     public StatusProjeto getStatus() {
         return status;
-    }
-
-    public void setStatus(StatusProjeto status) {
-        this.status = status;
     }
 
     public PrioridadeProjeto getPrioridade() {
