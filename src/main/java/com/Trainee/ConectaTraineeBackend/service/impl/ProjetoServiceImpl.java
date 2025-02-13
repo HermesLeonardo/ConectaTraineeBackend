@@ -46,4 +46,15 @@ public class ProjetoServiceImpl implements ProjetoService {
         logger.info("Deletando projeto com ID: {}", id);
         projetoRepository.deleteById(id);
     }
+
+    public Projeto atualizarProjeto(Long id, Projeto projeto) {
+        Projeto projetoExistente = projetoRepository.findById(id).orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+        projetoExistente.setNome(projeto.getNome());
+        projetoExistente.setDescricao(projeto.getDescricao());
+        projetoExistente.setStatus(projeto.getStatus());
+        projetoExistente.setPrioridade(projeto.getPrioridade());
+        return projetoRepository.save(projetoExistente);
+    }
+
+
 }

@@ -52,10 +52,8 @@ public class Projeto {
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
-    // ✅ Construtor padrão necessário para o JPA
     public Projeto() {}
 
-    // ✅ Construtor principal para criação de projetos
     public Projeto(String nome, String descricao, LocalDateTime dataInicio, StatusProjeto status, PrioridadeProjeto prioridade, Usuario usuarioResponsavel) {
         this.nome = nome;
         this.descricao = descricao;

@@ -29,7 +29,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // Obtém o token do cabeçalho "Authorization"
+        String path = request.getRequestURI();
+
+        if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 🔒 Validação do token JWT
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -48,10 +55,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // ✅ Configura a autenticação no contexto do Spring Security
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }

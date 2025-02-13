@@ -8,5 +8,8 @@ public interface ProjetoService {
     Projeto salvarProjeto(Projeto projeto);
     Optional<Projeto> buscarPorId(Long id);
     List<Projeto> listarTodos();
+    Projeto atualizarProjeto(Long id, Projeto projeto);
+
+
     void deletarProjeto(Long id);
 }

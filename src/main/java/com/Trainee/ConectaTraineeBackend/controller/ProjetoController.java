@@ -53,4 +53,20 @@ public class ProjetoController {
         projetoService.deletarProjeto(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Projeto> atualizarProjeto(@PathVariable Long id, @RequestBody Projeto projeto) {
+        logger.info("Atualizando projeto com ID: {}", id);
+        Optional<Projeto> projetoExistente = projetoService.buscarPorId(id);
+
+        if (projetoExistente.isPresent()) {
+            Projeto projetoAtualizado = projetoService.atualizarProjeto(id, projeto);
+            logger.info("Projeto atualizado com sucesso: ID {}", id);
+            return ResponseEntity.ok(projetoAtualizado);
+        } else {
+            logger.warn("Projeto com ID {} não encontrado.", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

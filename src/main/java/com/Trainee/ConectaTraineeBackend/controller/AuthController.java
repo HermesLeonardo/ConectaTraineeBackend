@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*") // 🔥 Permite requisições de qualquer origem (Postman, Frontend, etc.)
+@CrossOrigin(origins = "*") // Permite requisições de qualquer origem (Postman, Frontend, etc.)
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -34,9 +34,9 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/register") // ✅ Verifique se a rota está correta
+    @PostMapping("/register")
     public ResponseEntity<Usuario> registerUser(@RequestBody Usuario usuario) {
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha())); // 🔒 Criptografa a senha antes de salvar
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha())); //  Criptografa a senha antes de salvar
         Usuario novoUsuario = usuarioRepository.save(usuario);
         return ResponseEntity.ok(novoUsuario);
     }
