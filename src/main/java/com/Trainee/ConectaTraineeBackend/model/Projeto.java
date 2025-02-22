@@ -1,11 +1,12 @@
 package com.Trainee.ConectaTraineeBackend.model;
 
-import com.Trainee.ConectaTraineeBackend.enums.StatusProjeto;
 import com.Trainee.ConectaTraineeBackend.enums.PrioridadeProjeto;
+import com.Trainee.ConectaTraineeBackend.enums.StatusProjeto;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,9 +45,11 @@ public class Projeto {
 
     @ManyToOne
     @JoinColumn(name = "id_usuario_responsavel")
+    @JsonBackReference  // 🔹 Impede referência circular com Usuario
     private Usuario usuarioResponsavel;
 
     @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // 🔹 Evita carregar lista completa e quebrar a serialização
     private List<ProjetoUsuario> usuariosProjeto;
 
     @Column(nullable = false, updatable = false)

@@ -32,34 +32,68 @@ public class AuthController {
         this.usuarioRepository = usuarioRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+
+        // Criar ADMIN automaticamente, se não existir
+        criarAdminSeNecessario();
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Usuario> registerUser(@RequestBody Usuario usuario) {
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha())); //  Criptografa a senha antes de salvar
-        Usuario novoUsuario = usuarioRepository.save(usuario);
-        return ResponseEntity.ok(novoUsuario);
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser (@RequestBody Map<String, String> loginRequest) {
-        String email = loginRequest.get("email");
-        String senha = loginRequest.get("senha");
-
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, senha));
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body("Usuário ou senha inválidos");
+    public ResponseEntity<?> registerUser(@RequestBody Usuario usuario) {
+        // Verifica se já existe um usuário com o mesmo e-mail
+        if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body("E-mail já cadastrado.");
         }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        String token = jwtUtil.generateToken(userDetails.getUsername());
-
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha())); // Criptografa a senha antes de salvar
+        Usuario novoUsuario = usuarioRepository.save(usuario);
         return ResponseEntity.ok(Map.of(
-                "token", token,
-                "user", userDetails.getUsername(),
-                "roles", userDetails.getAuthorities()
+                "message", "Usuário cadastrado com sucesso",
+                "user", novoUsuario.getEmail()
         ));
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticateUser(@RequestBody Map<String, String> loginRequest) {
+        String email = loginRequest.get("email");
+        String senha = loginRequest.get("senha");
+
+        // 🔍 Buscar o usuário no banco
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Usuário não encontrado");
+        }
+
+        Usuario usuario = usuarioOpt.get();
+
+        // Comparar senha digitada com senha criptografada no banco
+        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+            return ResponseEntity.status(401).body("Senha incorreta");
+        }
+
+        // 🏷 Gerar token JWT para o usuário autenticado
+        String token = jwtUtil.generateToken(usuario.getEmail());
+
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "user", usuario.getEmail(),
+                "role", usuario.getPerfil()
+        ));
+    }
+
+
+    private void criarAdminSeNecessario() {
+        if (!usuarioRepository.existsByPerfil("ADMIN")) {
+            Usuario admin = new Usuario();
+            admin.setNome("Administrador");
+            admin.setEmail("admin@empresa.com");
+            admin.setSenha(passwordEncoder.encode("senhasegura"));
+            admin.setPerfil("ADMIN");
+
+            usuarioRepository.save(admin);
+            System.out.println("Usuário ADMIN criado automaticamente.");
+        } else {
+            System.out.println("ADMIN já existe. Nenhuma ação necessária.");
+        }
+    }
 }

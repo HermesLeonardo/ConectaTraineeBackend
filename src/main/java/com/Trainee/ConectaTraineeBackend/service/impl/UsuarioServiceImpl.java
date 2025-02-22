@@ -1,5 +1,6 @@
 package com.Trainee.ConectaTraineeBackend.service.impl;
 
+import com.Trainee.ConectaTraineeBackend.model.Atividade;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.service.UsuarioService;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -46,5 +48,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     public void deletarUsuario(Long id) {
         logger.info("Deletando usuário com ID: {}", id);
         usuarioRepository.deleteById(id);
+    }
+
+    @Override
+    public Set<Atividade> listarAtividades(Long id) {
+        return null;
     }
 }
