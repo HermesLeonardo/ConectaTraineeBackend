@@ -29,11 +29,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         Usuario usuario = usuarioOpt.get();
 
-        // ✅ Agora adicionamos "ROLE_" antes do perfil (exemplo: "ROLE_ADMIN", "ROLE_USUARIO")
+        // ✅ Adicionando automaticamente "ROLE_" antes do perfil
         return org.springframework.security.core.userdetails.User
                 .withUsername(usuario.getEmail())
                 .password(usuario.getSenha()) // Senha já criptografada
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getPerfil()))) // ✅ Corrigimos as Roles
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getPerfil())))
                 .build();
     }
+
 }

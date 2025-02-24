@@ -77,18 +77,18 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "token", token,
                 "user", usuario.getEmail(),
-                "role", usuario.getPerfil()
+                "role", "ROLE_" + usuario.getPerfil()  // Corrigido para retornar "ROLE_ADMIN"
         ));
     }
 
 
     private void criarAdminSeNecessario() {
-        if (!usuarioRepository.existsByPerfil("ADMIN")) {
+        if (!usuarioRepository.existsByPerfil("ADMIN")) { // Deve ser "ADMIN", sem "ROLE_"
             Usuario admin = new Usuario();
             admin.setNome("Administrador");
             admin.setEmail("admin@empresa.com");
             admin.setSenha(passwordEncoder.encode("senhasegura"));
-            admin.setPerfil("ADMIN");
+            admin.setPerfil("ADMIN"); // Salvar sem "ROLE_"
 
             usuarioRepository.save(admin);
             System.out.println("Usuário ADMIN criado automaticamente.");
@@ -96,4 +96,5 @@ public class AuthController {
             System.out.println("ADMIN já existe. Nenhuma ação necessária.");
         }
     }
+
 }

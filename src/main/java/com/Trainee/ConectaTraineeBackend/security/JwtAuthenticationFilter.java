@@ -30,35 +30,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        System.out.println("🔍 Interceptando requisição: " + path);
 
         if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")) {
+            System.out.println("🟢 Permitir sem autenticação: " + path);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 🔒 Validação do token JWT
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("🔴 Token ausente ou mal formatado");
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
         String username = jwtUtil.extractUsername(token);
+        System.out.println("🔑 Token extraído para usuário: " + username);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            System.out.println("✅ Usuário encontrado no banco: " + userDetails.getUsername());
+            System.out.println("👮‍♂️ Autoridades do usuário: " + userDetails.getAuthorities());
 
             if (jwtUtil.validateToken(token, username)) {
+                System.out.println("❌ Token inválido ou expirado para " + username);
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println("🔵 Autenticação configurada com sucesso para " + username);
+            } else {
+                System.out.println("❌ Token inválido ou expirado para " + username);
             }
+            System.out.println("🔍 Autoridades do usuário autenticado: " + userDetails.getAuthorities());
+
         }
 
         filterChain.doFilter(request, response);
     }
+
 }
