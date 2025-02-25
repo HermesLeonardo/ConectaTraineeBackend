@@ -42,17 +42,14 @@ public class Projeto {
     @Column(nullable = false)
     private PrioridadeProjeto prioridade;
 
-    @ManyToMany
-    @JoinTable(
-            name = "projetos_usuarios",
-            joinColumns = @JoinColumn(name = "id_projeto"),
-            inverseJoinColumns = @JoinColumn(name = "id_usuario")
-    )
-    @JsonIgnore  // 🔹 Evita carregar toda a lista na serialização
-    private List<Usuario> usuariosResponsaveis;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
+
+
+    @OneToMany(mappedBy = "projeto")
+    private List<ProjetoUsuario> projetosUsuarios;
+
+
 
     public Projeto() {}
 
@@ -90,9 +87,5 @@ public class Projeto {
 
     public PrioridadeProjeto getPrioridade() { return prioridade; }
     public void setPrioridade(PrioridadeProjeto prioridade) { this.prioridade = prioridade; }
-
-    public List<Usuario> getUsuariosResponsaveis() { return usuariosResponsaveis; }
-    public void setUsuariosResponsaveis(List<Usuario> usuariosResponsaveis) { this.usuariosResponsaveis = usuariosResponsaveis; }
-
     public LocalDateTime getDataCriacao() { return dataCriacao; }
 }

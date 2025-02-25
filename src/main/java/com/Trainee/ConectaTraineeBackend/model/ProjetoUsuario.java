@@ -10,13 +10,14 @@ public class ProjetoUsuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_projeto", nullable = false)
     private Projeto projeto;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
+
 
     public ProjetoUsuario() {}
 

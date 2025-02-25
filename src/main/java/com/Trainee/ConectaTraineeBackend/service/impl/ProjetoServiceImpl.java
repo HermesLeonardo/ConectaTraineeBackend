@@ -1,7 +1,11 @@
 package com.Trainee.ConectaTraineeBackend.service.impl;
 
 import com.Trainee.ConectaTraineeBackend.model.Projeto;
+import com.Trainee.ConectaTraineeBackend.model.ProjetoUsuario;
+import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
+import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
+import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.service.ProjetoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjetoServiceImpl implements ProjetoService {
@@ -18,16 +23,39 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Autowired
     private ProjetoRepository projetoRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ProjetoUsuarioRepository projetoUsuarioRepository;
+
     @Override
-    public Projeto salvarProjeto(Projeto projeto) {
-        logger.info("Salvando projeto: {}", projeto.getNome());
-        try {
-            return projetoRepository.save(projeto);
-        } catch (Exception e) {
-            logger.error("Erro ao salvar projeto: {}", e.getMessage());
-            throw new RuntimeException("Erro ao salvar projeto", e);
+    public Projeto salvarProjeto(Projeto projeto, List<Long> usuariosIds) {
+        logger.info("💾 Salvando projeto: {}", projeto.getNome());
+
+        Projeto projetoSalvo = projetoRepository.save(projeto);
+        logger.info("✅ Projeto salvo no banco com ID {}", projetoSalvo.getId());
+
+        // Verifica se há usuários para vincular ao projeto
+        if (usuariosIds != null && !usuariosIds.isEmpty()) {
+            for (Long idUsuario : usuariosIds) {
+                Usuario usuario = usuarioRepository.findById(idUsuario)
+                        .orElseThrow(() -> new RuntimeException("Usuário com ID " + idUsuario + " não encontrado"));
+
+                ProjetoUsuario projetoUsuario = new ProjetoUsuario(projetoSalvo, usuario);
+                projetoUsuarioRepository.save(projetoUsuario);
+                logger.info("✅ Usuário {} vinculado ao projeto {}", usuario.getNome(), projetoSalvo.getNome());
+            }
+        } else {
+            logger.warn("⚠ Nenhum usuário foi vinculado ao projeto.");
         }
+
+        return projetoSalvo;
     }
+
+
+
+
 
     @Override
     public Optional<Projeto> buscarPorId(Long id) {

@@ -1,5 +1,6 @@
 package com.Trainee.ConectaTraineeBackend.controller;
 
+import com.Trainee.ConectaTraineeBackend.DTO.ProjetoRequest;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,31 +39,14 @@ public class ProjetoController {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
-    public ResponseEntity<Projeto> criarProjeto(@RequestBody Projeto projeto) {
-        logger.info("Criando novo projeto: {}", projeto.getNome());
+    public ResponseEntity<Projeto> criarProjeto(@RequestBody ProjetoRequest request) {
+        logger.info("🟢 Criando novo projeto: {}", request.getProjeto().getNome());
 
-        if (projeto.getUsuariosResponsaveis() == null || projeto.getUsuariosResponsaveis().isEmpty()) {
-            logger.warn("Nenhum usuário responsável foi enviado.");
-        } else {
-            // 🔹 Convertendo lista de IDs para objetos Usuario
-            List<Long> idsUsuarios = projeto.getUsuariosResponsaveis()
-                    .stream()
-                    .map(Usuario::getId)  // 🔴 ERRO: `projeto.getUsuariosResponsaveis()` pode estar vindo apenas com IDs, não objetos
-                    .collect(Collectors.toList());
-
-            List<Usuario> usuarios = usuarioRepository.findAllById(idsUsuarios);
-
-            logger.info("Usuários encontrados no banco: {}",
-                    usuarios.stream().map(Usuario::getNome).collect(Collectors.toList()));
-
-            projeto.setUsuariosResponsaveis(usuarios); // 🔧 Vinculando usuários encontrados ao projeto
-        }
-
-        Projeto novoProjeto = projetoService.salvarProjeto(projeto);
-        logger.info("Projeto criado com sucesso: ID {}", novoProjeto.getId());
+        Projeto novoProjeto = projetoService.salvarProjeto(request.getProjeto(), request.getUsuariosIds());
 
         return ResponseEntity.ok(novoProjeto);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Projeto> buscarPorId(@PathVariable Long id) {

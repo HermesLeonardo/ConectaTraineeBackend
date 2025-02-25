@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -41,9 +42,9 @@ public class Usuario {
     @Column(nullable = false)
     private String perfil;
 
-    @ManyToMany(mappedBy = "usuariosResponsaveis")
-    @JsonIgnore  // 🔹 Evita referência circular com Atividades
-    private Set<Atividade> atividades;
+    @OneToMany(mappedBy = "usuario")
+    private List<ProjetoUsuario> projetosUsuarios;
+
 
     public Usuario() {}
 
@@ -67,6 +68,4 @@ public class Usuario {
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public LocalDateTime getUltimoLogin() { return ultimoLogin; }
     public void setUltimoLogin(LocalDateTime ultimoLogin) { this.ultimoLogin = ultimoLogin; }
-    public Set<Atividade> getAtividades() { return atividades; }
-    public void setAtividades(Set<Atividade> atividades) { this.atividades = atividades; }
 }

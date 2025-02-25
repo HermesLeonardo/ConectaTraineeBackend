@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProjetoService {
-    Projeto salvarProjeto(Projeto projeto);
+    Projeto salvarProjeto(Projeto projeto, List<Long> usuariosIds);
     Optional<Projeto> buscarPorId(Long id);
     List<Projeto> listarTodos();
     Projeto atualizarProjeto(Long id, Projeto projeto);
