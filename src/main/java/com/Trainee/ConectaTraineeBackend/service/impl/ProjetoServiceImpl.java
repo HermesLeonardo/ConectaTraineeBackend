@@ -60,8 +60,24 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override
     public Optional<Projeto> buscarPorId(Long id) {
         logger.info("Buscando projeto com ID: {}", id);
-        return projetoRepository.findById(id);
+        Optional<Projeto> projetoOpt = projetoRepository.findById(id);
+
+        if (projetoOpt.isPresent()) {
+            Projeto projeto = projetoOpt.get();
+
+            // Buscar os IDs dos usuários responsáveis pelo projeto
+            List<Long> usuariosIds = projetoUsuarioRepository.findByProjetoId(id)
+                    .stream()
+                    .map(projetoUsuario -> projetoUsuario.getUsuario().getId())
+                    .collect(Collectors.toList());
+
+            projeto.setIdUsuarioResponsavel(usuariosIds);
+            return Optional.of(projeto);
+        }
+
+        return Optional.empty();
     }
+
 
     @Override
     public List<Projeto> listarTodos() {

@@ -88,4 +88,8 @@ public class Projeto {
     public PrioridadeProjeto getPrioridade() { return prioridade; }
     public void setPrioridade(PrioridadeProjeto prioridade) { this.prioridade = prioridade; }
     public LocalDateTime getDataCriacao() { return dataCriacao; }
+
+    public void setIdUsuarioResponsavel(List<Long> usuariosIds) {
+
+    }
 }

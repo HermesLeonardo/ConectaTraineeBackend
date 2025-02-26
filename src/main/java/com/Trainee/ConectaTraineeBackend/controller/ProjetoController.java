@@ -2,6 +2,7 @@ package com.Trainee.ConectaTraineeBackend.controller;
 
 import com.Trainee.ConectaTraineeBackend.DTO.ProjetoRequest;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
+import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,16 +49,35 @@ public class ProjetoController {
     }
 
 
+    @Autowired
+    private ProjetoUsuarioRepository projetoUsuarioRepository;
+
     @GetMapping("/{id}")
     public ResponseEntity<Projeto> buscarPorId(@PathVariable Long id) {
         logger.info("Buscando projeto com ID: {}", id);
         Optional<Projeto> projeto = projetoService.buscarPorId(id);
-        return projeto.map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    logger.warn("Projeto com ID {} não encontrado.", id);
-                    return ResponseEntity.notFound().build();
-                });
+
+        if (projeto.isPresent()) {
+            Projeto projetoEncontrado = projeto.get();
+
+            // 🔥 Buscando corretamente os IDs dos usuários responsáveis
+            List<Long> usuariosIds = projetoUsuarioRepository.findByProjetoId(id)
+                    .stream()
+                    .map(projetoUsuario -> projetoUsuario.getUsuario().getId())
+                    .collect(Collectors.toList());
+
+            projetoEncontrado.setIdUsuarioResponsavel(usuariosIds);
+
+            logger.info("👥 IDs dos responsáveis carregados: {}", usuariosIds);
+            return ResponseEntity.ok(projetoEncontrado);
+        } else {
+            logger.warn("Projeto com ID {} não encontrado.", id);
+            return ResponseEntity.notFound().build();
+        }
     }
+
+
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarProjeto(@PathVariable Long id) {
