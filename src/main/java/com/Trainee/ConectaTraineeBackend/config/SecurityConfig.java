@@ -37,7 +37,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/projetos").hasAuthority("ROLE_ADMIN")  // Alterado de hasRole para hasAuthority
+                        .requestMatchers(HttpMethod.POST, "/api/projetos").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -52,7 +53,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));  // Permite o Angular
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));  // Métodos permitidos
-        configuration.setAllowedHeaders(Arrays.asList("*"));  // Permite todos os cabeçalhos
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type")); // 🔹 Inclua Authorization
         configuration.setAllowCredentials(true);  // Permite envio de cookies/tokens
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

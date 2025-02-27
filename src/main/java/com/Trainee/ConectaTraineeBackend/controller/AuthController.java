@@ -39,18 +39,24 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Usuario usuario) {
-        // Verifica se já existe um usuário com o mesmo e-mail
-        if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("E-mail já cadastrado.");
+        System.out.println("🔍 Tentativa de registro: " + usuario.getEmail());
+        System.out.println("🛑 Senha recebida (antes da validação): [" + usuario.getSenha() + "]"); // Verifica a senha recebida
+
+        if (usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
+            System.out.println("❌ Erro: Senha está nula ou vazia!");
+            return ResponseEntity.badRequest().body("Erro: Senha não pode ser nula ou vazia!");
         }
 
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha())); // Criptografa a senha antes de salvar
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         Usuario novoUsuario = usuarioRepository.save(usuario);
+
         return ResponseEntity.ok(Map.of(
                 "message", "Usuário cadastrado com sucesso",
                 "user", novoUsuario.getEmail()
         ));
     }
+
+
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody Map<String, String> loginRequest) {

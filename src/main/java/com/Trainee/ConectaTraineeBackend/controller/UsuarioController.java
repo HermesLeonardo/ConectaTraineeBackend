@@ -59,4 +59,12 @@ public ResponseEntity<Set<Atividade>> listarAtividades(@PathVariable Long id) {
     return ResponseEntity.ok(usuarioService.listarAtividades(id));
 }
 
+    @PutMapping("/{id}/desativar")
+    public ResponseEntity<String> desativarUsuario(@PathVariable Long id) {
+        usuarioService.desativarUsuario(id);
+        return ResponseEntity.ok("Usuário desativado com sucesso!");
+    }
+
+
+
 }

@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "usuarios")
@@ -30,7 +29,6 @@ public class Usuario {
     @NotNull(message = "Senha é obrigatória")
     @Size(min = 6, max = 255, message = "Senha deve ter entre 6 e 255 caracteres")
     @Column(nullable = false)
-    @JsonIgnore  // 🔹 Evita expor a senha na resposta JSON
     private String senha;
 
     @Column(name = "data_criacao", nullable = false)
@@ -42,9 +40,12 @@ public class Usuario {
     @Column(nullable = false)
     private String perfil;
 
-    @OneToMany(mappedBy = "usuario")
-    private List<ProjetoUsuario> projetosUsuarios;
+    @Column(nullable = false)
+    private boolean ativo = true;
 
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<ProjetoUsuario> projetosUsuarios;
 
     public Usuario() {}
 
@@ -53,6 +54,7 @@ public class Usuario {
         this.email = email;
         this.senha = senha;
         this.perfil = perfil;
+        this.ativo = true; // Garantir que o usuário é criado como ativo
         this.dataCriacao = LocalDateTime.now();
     }
 
@@ -68,4 +70,7 @@ public class Usuario {
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public LocalDateTime getUltimoLogin() { return ultimoLogin; }
     public void setUltimoLogin(LocalDateTime ultimoLogin) { this.ultimoLogin = ultimoLogin; }
+
+    public boolean isAtivo() { return ativo; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 }

@@ -16,4 +16,5 @@ public interface UsuarioService {
 
     Set<Atividade> listarAtividades(Long id);
 
+    void desativarUsuario(Long id);
 }
