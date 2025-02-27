@@ -48,26 +48,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
         String username = jwtUtil.extractUsername(token);
         System.out.println("🔑 Token extraído para usuário: " + username);
+        System.out.println("🛑 Cabeçalho Authorization: " + request.getHeader("Authorization"));
+
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             System.out.println("✅ Usuário encontrado no banco: " + userDetails.getUsername());
             System.out.println("👮‍♂️ Autoridades do usuário: " + userDetails.getAuthorities());
 
-            if (jwtUtil.validateToken(token, username)) {
+            if (!jwtUtil.validateToken(token, username)) {
                 System.out.println("❌ Token inválido ou expirado para " + username);
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                System.out.println("🔵 Autenticação configurada com sucesso para " + username);
-            } else {
-                System.out.println("❌ Token inválido ou expirado para " + username);
+                filterChain.doFilter(request, response);  // Interrompe a requisição caso o token seja inválido
+                return;
             }
-            System.out.println("🔍 Autoridades do usuário autenticado: " + userDetails.getAuthorities());
 
+            // Se o token for válido, configura a autenticação
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
+            );
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            System.out.println("🔵 Autenticação configurada com sucesso para " + username);
+            System.out.println("🔍 Autoridades do usuário autenticado: " + userDetails.getAuthorities());
         }
 
+        System.out.println("🔍 Autenticação finalizada: " + SecurityContextHolder.getContext().getAuthentication());
         filterChain.doFilter(request, response);
     }
 

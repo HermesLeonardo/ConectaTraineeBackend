@@ -12,9 +12,11 @@ public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
     Optional<Projeto> findByNome(String nome);
 
     @Query("SELECT p FROM Projeto p " +
-            "JOIN FETCH p.projetosUsuarios pu " +
-            "JOIN FETCH pu.usuario " +
+            "LEFT JOIN FETCH p.projetosUsuarios pu " +
+            "LEFT JOIN FETCH pu.usuario " +
             "WHERE p.id = :id")
     Optional<Projeto> buscarProjetoComUsuarios(@Param("id") Long id);
+
+
 
 }

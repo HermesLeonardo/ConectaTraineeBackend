@@ -7,6 +7,7 @@ import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.service.ProjetoService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,18 +31,23 @@ public class ProjetoServiceImpl implements ProjetoService {
     private ProjetoUsuarioRepository projetoUsuarioRepository;
 
     @Override
+    @Transactional
     public Projeto salvarProjeto(Projeto projeto, List<Long> usuariosIds) {
         logger.info("💾 Salvando projeto: {}", projeto.getNome());
 
+        // Salva o projeto (caso seja um novo ou uma edição)
         Projeto projetoSalvo = projetoRepository.save(projeto);
         logger.info("✅ Projeto salvo no banco com ID {}", projetoSalvo.getId());
 
-        // Verifica se há usuários para vincular ao projeto
-        if (usuariosIds != null && !usuariosIds.isEmpty()) {
-            for (Long idUsuario : usuariosIds) {
-                Usuario usuario = usuarioRepository.findById(idUsuario)
-                        .orElseThrow(() -> new RuntimeException("Usuário com ID " + idUsuario + " não encontrado"));
+        // 🔹 Removemos todos os vínculos anteriores para evitar duplicações
+        projetoUsuarioRepository.deleteByProjeto(projetoSalvo);
+        logger.info("🗑️ Vínculos antigos removidos para atualização dos usuários");
 
+        // 🔹 Verifica se há novos usuários para vincular
+        if (usuariosIds != null && !usuariosIds.isEmpty()) {
+            List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
+
+            for (Usuario usuario : usuarios) {
                 ProjetoUsuario projetoUsuario = new ProjetoUsuario(projetoSalvo, usuario);
                 projetoUsuarioRepository.save(projetoUsuario);
                 logger.info("✅ Usuário {} vinculado ao projeto {}", usuario.getNome(), projetoSalvo.getNome());
@@ -52,9 +58,6 @@ public class ProjetoServiceImpl implements ProjetoService {
 
         return projetoSalvo;
     }
-
-
-
 
 
     @Override
@@ -91,14 +94,55 @@ public class ProjetoServiceImpl implements ProjetoService {
         projetoRepository.deleteById(id);
     }
 
-    public Projeto atualizarProjeto(Long id, Projeto projeto) {
-        Projeto projetoExistente = projetoRepository.findById(id).orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
-        projetoExistente.setNome(projeto.getNome());
-        projetoExistente.setDescricao(projeto.getDescricao());
-        projetoExistente.setStatus(projeto.getStatus());
-        projetoExistente.setPrioridade(projeto.getPrioridade());
+    @Override
+    public Optional<Projeto> buscarProjetoComUsuarios(Long id) {
+        return projetoRepository.buscarProjetoComUsuarios(id);
+    }
+
+    @Override
+    @Transactional
+    public Projeto atualizarProjeto(Long id, Projeto projetoAtualizado, List<Long> usuariosIds) {
+        logger.info("📝 Atualizando projeto com ID {}", id);
+
+        Projeto projetoExistente = projetoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+
+        // Atualiza os atributos do projeto
+        projetoExistente.setNome(projetoAtualizado.getNome());
+        projetoExistente.setDescricao(projetoAtualizado.getDescricao());
+        projetoExistente.setStatus(projetoAtualizado.getStatus());
+        projetoExistente.setPrioridade(projetoAtualizado.getPrioridade());
+        projetoExistente.setDataInicio(projetoAtualizado.getDataInicio());
+        projetoExistente.setDataFim(projetoAtualizado.getDataFim());
+
+        // 🔹 Remover todos os vínculos antigos antes de salvar novos
+        projetoUsuarioRepository.deleteByProjeto(projetoExistente);
+        logger.info("🗑️ Vínculos antigos removidos.");
+
+        // 🔹 Adicionar os novos usuários
+        if (usuariosIds != null && !usuariosIds.isEmpty()) {
+            List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
+
+            List<ProjetoUsuario> novosVinculos = usuarios.stream()
+                    .map(usuario -> new ProjetoUsuario(projetoExistente, usuario))
+                    .collect(Collectors.toList());
+
+            projetoUsuarioRepository.saveAll(novosVinculos); // 🔹 Agora salvamos todos de uma vez
+            logger.info("✅ {} usuários vinculados ao projeto {}", novosVinculos.size(), projetoExistente.getNome());
+        } else {
+            logger.warn("⚠ Nenhum usuário foi vinculado ao projeto.");
+        }
+
+        // 🔹 Garantir que a lista de usuários seja carregada corretamente antes de salvar
+        projetoExistente.setProjetosUsuarios(projetoUsuarioRepository.findByProjetoId(projetoExistente.getId()));
+
         return projetoRepository.save(projetoExistente);
     }
+
+
+
+
+
 
 
 }

@@ -2,6 +2,7 @@ package com.Trainee.ConectaTraineeBackend.controller;
 
 import com.Trainee.ConectaTraineeBackend.DTO.ProjetoRequest;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
+import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public class ProjetoController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<Projeto>> listarTodos() {
         logger.info("Listando todos os projetos.");
@@ -52,30 +54,12 @@ public class ProjetoController {
     @Autowired
     private ProjetoUsuarioRepository projetoUsuarioRepository;
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<Projeto> buscarPorId(@PathVariable Long id) {
-        logger.info("Buscando projeto com ID: {}", id);
-        Optional<Projeto> projeto = projetoService.buscarPorId(id);
-
-        if (projeto.isPresent()) {
-            Projeto projetoEncontrado = projeto.get();
-
-            // 🔥 Buscando corretamente os IDs dos usuários responsáveis
-            List<Long> usuariosIds = projetoUsuarioRepository.findByProjetoId(id)
-                    .stream()
-                    .map(projetoUsuario -> projetoUsuario.getUsuario().getId())
-                    .collect(Collectors.toList());
-
-            projetoEncontrado.setIdUsuarioResponsavel(usuariosIds);
-
-            logger.info("👥 IDs dos responsáveis carregados: {}", usuariosIds);
-            return ResponseEntity.ok(projetoEncontrado);
-        } else {
-            logger.warn("Projeto com ID {} não encontrado.", id);
-            return ResponseEntity.notFound().build();
-        }
+        Optional<Projeto> projeto = projetoService.buscarProjetoComUsuarios(id);
+        return projeto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
-
 
 
 
@@ -86,18 +70,30 @@ public class ProjetoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Projeto> atualizarProjeto(@PathVariable Long id, @RequestBody Projeto projeto) {
-        logger.info("Atualizando projeto com ID: {}", id);
-        Optional<Projeto> projetoExistente = projetoService.buscarPorId(id);
+    public ResponseEntity<Projeto> atualizarProjeto(
+            @PathVariable Long id,
+            @RequestBody ProjetoRequest request) {
+        logger.info("🔄 Recebida requisição para atualizar projeto: {}", request.getProjeto().getNome());
 
-        if (projetoExistente.isPresent()) {
-            Projeto projetoAtualizado = projetoService.atualizarProjeto(id, projeto);
-            logger.info("Projeto atualizado com sucesso: ID {}", id);
-            return ResponseEntity.ok(projetoAtualizado);
-        } else {
-            logger.warn("Projeto com ID {} não encontrado.");
-            return ResponseEntity.notFound().build();
-        }
+        Projeto projetoAtualizado = projetoService.atualizarProjeto(id, request.getProjeto(), request.getUsuariosIds());
+        return ResponseEntity.ok(projetoAtualizado);
     }
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
