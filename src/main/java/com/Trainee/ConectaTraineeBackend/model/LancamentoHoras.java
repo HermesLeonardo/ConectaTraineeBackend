@@ -34,6 +34,8 @@ public class LancamentoHoras {
     // Construtor vazio (necessário para o JPA)
     public LancamentoHoras() {}
 
+
+
     public LancamentoHoras(Atividade atividade, Usuario usuario, String descricao, LocalDateTime dataInicio, LocalDateTime dataFim) {
         this.atividade = atividade;
         this.usuario = usuario;
@@ -42,6 +44,8 @@ public class LancamentoHoras {
         this.dataFim = dataFim;
         this.dataRegistro = LocalDateTime.now();
     }
+
+
 
     // Getters e Setters
     public Long getId() {

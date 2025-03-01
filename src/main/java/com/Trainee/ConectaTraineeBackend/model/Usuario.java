@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -44,8 +46,8 @@ public class Usuario {
     private boolean ativo = true;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<ProjetoUsuario> projetosUsuarios;
+    private List<ProjetoUsuario> projetosUsuarios = new ArrayList<>();
+
 
     public Usuario() {}
 
@@ -73,4 +75,12 @@ public class Usuario {
 
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
+
+    public List<ProjetoUsuario> getProjetosUsuarios() {
+        return projetosUsuarios;
+    }
+
+    public void setProjetosUsuarios(List<ProjetoUsuario> projetosUsuarios) {
+        this.projetosUsuarios = projetosUsuarios;
+    }
 }

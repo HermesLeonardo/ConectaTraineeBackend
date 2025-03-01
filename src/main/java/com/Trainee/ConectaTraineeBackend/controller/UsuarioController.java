@@ -66,5 +66,10 @@ public ResponseEntity<Set<Atividade>> listarAtividades(@PathVariable Long id) {
     }
 
 
+    @GetMapping("/{id}/tem-vinculacoes")
+    public ResponseEntity<Boolean> verificarVinculacoes(@PathVariable Long id) {
+        boolean temVinculacoes = usuarioService.temVinculacoes(id);
+        return ResponseEntity.ok(temVinculacoes);
+    }
 
 }

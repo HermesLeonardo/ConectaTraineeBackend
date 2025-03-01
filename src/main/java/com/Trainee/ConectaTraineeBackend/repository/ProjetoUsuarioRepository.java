@@ -8,8 +8,14 @@ import java.util.List;
 
 @Repository
 public interface ProjetoUsuarioRepository extends JpaRepository<ProjetoUsuario, Long> {
+
     List<ProjetoUsuario> findByUsuarioId(Long idUsuario);
+
     List<ProjetoUsuario> findByProjetoId(Long idProjeto);
 
-    void deleteByProjeto(Projeto projeto); // 🔹 Remove todos os vínculos de um projeto específico
+    // Remove todos os vínculos de um projeto específico
+    void deleteByProjeto(Projeto projeto);
+
+    // Adicionando @Query para melhorar a performance
+    boolean existsByUsuarioId(Long id);
 }

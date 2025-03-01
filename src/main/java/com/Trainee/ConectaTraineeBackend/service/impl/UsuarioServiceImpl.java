@@ -2,6 +2,8 @@ package com.Trainee.ConectaTraineeBackend.service.impl;
 
 import com.Trainee.ConectaTraineeBackend.model.Atividade;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
+import com.Trainee.ConectaTraineeBackend.repository.LancamentoHorasRepository;
+import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.service.UsuarioService;
 import org.slf4j.Logger;
@@ -18,6 +20,13 @@ import java.util.Set;
 public class UsuarioServiceImpl implements UsuarioService {
 
     private static final Logger logger = LoggerFactory.getLogger(UsuarioServiceImpl.class);
+
+    @Autowired
+    private LancamentoHorasRepository lancamentoHorasRepository;
+
+    @Autowired
+    private ProjetoUsuarioRepository projetoUsuarioRepository;
+
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -55,16 +64,25 @@ public class UsuarioServiceImpl implements UsuarioService {
     public void deletarUsuario(Long id) {
         logger.warn("⚠ Tentativa de exclusão do usuário ID: {}", id);
 
-        Optional<Usuario> usuario = usuarioRepository.findById(id);
-        if (usuario.isPresent()) {
-            logger.warn("⚠ Usuário encontrado: {}", usuario.get().getEmail());
-        } else {
-            logger.error("❌ ERRO: Usuário já não existe antes da exclusão!");
-        }
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
 
-        usuarioRepository.deleteById(id);
-        logger.info("✅ Usuário deletado com sucesso!");
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+
+            // Verifica se o usuário possui projetos vinculados antes de tentar limpar a lista
+            if (!usuario.getProjetosUsuarios().isEmpty()) {
+                usuario.getProjetosUsuarios().clear();
+                usuarioRepository.save(usuario); // Salva para atualizar a referência no banco
+            }
+
+            usuarioRepository.deleteById(id);
+            logger.info("✅ Usuário deletado com sucesso!");
+        } else {
+            logger.error("❌ ERRO: Usuário com ID {} não encontrado para exclusão!", id);
+        }
     }
+
+
 
 
     public void desativarUsuario(Long id) {
@@ -77,6 +95,19 @@ public class UsuarioServiceImpl implements UsuarioService {
         } else {
             logger.warn("❌ Tentativa de desativar um usuário que não existe: ID {}", id);
         }
+    }
+
+    @Override
+    public boolean temVinculacoes(Long id) {
+        logger.info("🔎 Verificando se o usuário {} tem registros vinculados...", id);
+
+        boolean temHorasLancadas = lancamentoHorasRepository.existsByUsuarioId(id);
+        boolean temProjetosVinculados = projetoUsuarioRepository.existsByUsuarioId(id);
+
+        logger.info("📌 Usuário {} possui horas lançadas? {}", id, temHorasLancadas);
+        logger.info("📌 Usuário {} está vinculado a projetos? {}", id, temProjetosVinculados);
+
+        return temHorasLancadas || temProjetosVinculados;
     }
 
 

@@ -39,6 +39,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/projetos").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
