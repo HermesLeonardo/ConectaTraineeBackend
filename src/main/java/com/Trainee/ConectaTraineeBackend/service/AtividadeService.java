@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface AtividadeService {
-    Atividade salvarAtividade(Atividade atividade);
+    Atividade salvarAtividade(Atividade atividade, Set<Long> usuariosIds);
     Optional<Atividade> buscarPorId(Long id);
     List<Atividade> listarTodos();
     void deletarAtividade(Long id);

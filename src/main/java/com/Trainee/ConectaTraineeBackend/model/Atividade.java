@@ -1,12 +1,17 @@
 package com.Trainee.ConectaTraineeBackend.model;
 
 import com.Trainee.ConectaTraineeBackend.enums.StatusAtividade;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Setter;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "atividades")
@@ -18,7 +23,7 @@ public class Atividade {
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
-    @JsonIgnore  // 🔹 Evita ciclos com Projeto
+    @JsonBackReference
     private Projeto projeto;
 
     @NotNull(message = "Nome da atividade é obrigatório")
@@ -29,11 +34,13 @@ public class Atividade {
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
+    @Setter
     @Column(nullable = false)
-    private LocalDateTime dataInicio = LocalDateTime.now();
+    private LocalDate dataInicio;
 
+    @Setter
     @Column
-    private LocalDateTime dataFim;
+    private LocalDate dataFim;
 
     @NotNull(message = "Status da atividade é obrigatório")
     @Enumerated(EnumType.STRING)
@@ -43,24 +50,24 @@ public class Atividade {
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "atividades_usuarios",
             joinColumns = @JoinColumn(name = "id_atividade"),
             inverseJoinColumns = @JoinColumn(name = "id_usuario")
     )
-    @JsonIgnore  // 🔹 Evita ciclos com Usuario
-    private Set<Usuario> usuariosResponsaveis;
+    private Set<Usuario> usuariosResponsaveis = new HashSet<>();
+
 
     public Atividade() {}
 
-    public Atividade(Projeto projeto, String nome, String descricao, StatusAtividade status) {
+    public Atividade(Projeto projeto, String nome, String descricao, StatusAtividade status, LocalDate dataInicio) {
         this.projeto = projeto;
         this.nome = nome;
         this.descricao = descricao;
         this.status = status;
         this.dataCriacao = LocalDateTime.now();
-        this.dataInicio = LocalDateTime.now();
+        this.dataInicio = dataInicio; // Corrigido
     }
 
     public Long getId() { return id; }
@@ -71,16 +78,27 @@ public class Atividade {
     public void setNome(String nome) { this.nome = nome; }
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
-    public LocalDateTime getDataInicio() { return dataInicio; }
-    public LocalDateTime getDataFim() { return dataFim; }
+
+    // ✅ Corrigido para LocalDate
+    public LocalDate getDataInicio() { return dataInicio; }
+    public LocalDate getDataFim() { return dataFim; }
+
     public StatusAtividade getStatus() { return status; }
+
     public void setStatus(StatusAtividade status) {
         this.status = status;
-        if (status == StatusAtividade.CONCLUIDA) {
-            this.dataFim = LocalDateTime.now();
+
+        if (status == StatusAtividade.CONCLUIDA && this.dataFim == null) {
+            this.dataFim = LocalDate.now(); // 🔹 Só define se ainda não tiver um valor
         }
     }
+
+
     public Set<Usuario> getUsuariosResponsaveis() { return usuariosResponsaveis; }
     public void setUsuariosResponsaveis(Set<Usuario> usuariosResponsaveis) { this.usuariosResponsaveis = usuariosResponsaveis; }
     public LocalDateTime getDataCriacao() { return dataCriacao; }
+
+    public Set<Long> getUsuariosResponsaveisIds() {
+        return usuariosResponsaveis.stream().map(Usuario::getId).collect(Collectors.toSet());
+    }
 }

@@ -36,13 +36,30 @@ public class SecurityConfig {
                 .cors().and()
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // 🔹 Permitir login e registro sem autenticação
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+
+                        // 🔹 Apenas ADMIN pode criar projetos, usuários e atividades
                         .requestMatchers(HttpMethod.POST, "/api/projetos").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/atividades").hasAuthority("ROLE_ADMIN")
+
+                        // 🔹 Apenas ADMIN pode deletar ou atualizar usuários
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
 
+                        // 🔹 Apenas ADMIN pode deletar ou atualizar projetos
+                        .requestMatchers(HttpMethod.DELETE, "/api/projetos/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/projetos/**").hasAuthority("ROLE_ADMIN")
+
+                        // 🔹 Apenas ADMIN pode deletar ou atualizar atividades
+                        .requestMatchers(HttpMethod.DELETE, "/api/atividades/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/atividades/**").hasAuthority("ROLE_ADMIN")
+
+                        // 🔹 Permitir requisições OPTIONS (CORS)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 🔹 Qualquer outra requisição precisa estar autenticada
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -51,6 +68,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
