@@ -55,6 +55,8 @@ public class SecurityConfig {
                         // 🔹 Apenas ADMIN pode deletar ou atualizar atividades
                         .requestMatchers(HttpMethod.DELETE, "/api/atividades/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/atividades/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/atividades").authenticated()
+
 
                         // 🔹 Permitir requisições OPTIONS (CORS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

@@ -50,13 +50,14 @@ public class Atividade {
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     @JoinTable(
             name = "atividades_usuarios",
             joinColumns = @JoinColumn(name = "id_atividade"),
             inverseJoinColumns = @JoinColumn(name = "id_usuario")
     )
     private Set<Usuario> usuariosResponsaveis = new HashSet<>();
+
 
 
     public Atividade() {}

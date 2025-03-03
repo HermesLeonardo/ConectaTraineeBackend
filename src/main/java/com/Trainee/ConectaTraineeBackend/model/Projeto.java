@@ -2,11 +2,14 @@ package com.Trainee.ConectaTraineeBackend.model;
 
 import com.Trainee.ConectaTraineeBackend.enums.PrioridadeProjeto;
 import com.Trainee.ConectaTraineeBackend.enums.StatusProjeto;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +33,12 @@ public class Projeto {
 
     @NotNull(message = "Data de início do projeto é obrigatória")
     @Column(nullable = false)
-    private LocalDateTime dataInicio;
+    @JsonFormat(pattern = "yyyy-MM-dd") // 🔹 Agora aceita apenas "YYYY-MM-DD"
+    private LocalDate  dataInicio;
 
     @Column // 🔹 Agora permite NULL para projetos em andamento
-    private LocalDateTime dataFim;
+    @JsonFormat(pattern = "yyyy-MM-dd") // 🔹 Agora aceita apenas "YYYY-MM-DD"
+    private LocalDate dataFim;
 
     @NotNull(message = "Status do projeto é obrigatório")
     @Enumerated(EnumType.STRING)
@@ -46,21 +51,25 @@ public class Projeto {
     private PrioridadeProjeto prioridade;
 
     @Column(nullable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") // 🔹 Mantém a parte da hora
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
 
-    @OneToMany(mappedBy = "projeto", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "projeto", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     private List<ProjetoUsuario> projetosUsuarios = new ArrayList<>();
 
     @JsonProperty("usuarios")
     public List<Usuario> getUsuarios() {
-        return projetosUsuarios != null
-                ? projetosUsuarios.stream()
-                .map(ProjetoUsuario::getUsuario) // Retorna objetos de usuário, não apenas IDs
-                .collect(Collectors.toList())
-                : new ArrayList<>();
+        if (projetosUsuarios == null || projetosUsuarios.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return projetosUsuarios.stream()
+                .map(ProjetoUsuario::getUsuario)
+                .distinct()  // 🔹 Evita duplicações
+                .collect(Collectors.toList());
     }
+
 
 
     public void setProjetosUsuarios(List<ProjetoUsuario> projetosUsuarios) {
@@ -73,16 +82,19 @@ public class Projeto {
 
 
     public void atualizarUsuarios(List<Usuario> usuarios) {
-        if (this.projetosUsuarios == null) {
-            this.projetosUsuarios = new ArrayList<>();
+        if (usuarios == null || usuarios.isEmpty()) {
+            this.projetosUsuarios.clear();
+            return;
         }
 
-        this.projetosUsuarios.clear(); // Remove vínculos anteriores
+        List<ProjetoUsuario> novosVinculos = usuarios.stream()
+                .map(usuario -> new ProjetoUsuario(this, usuario))
+                .collect(Collectors.toList());
 
-        for (Usuario usuario : usuarios) {
-            this.projetosUsuarios.add(new ProjetoUsuario(this, usuario));
-        }
+        this.projetosUsuarios.clear(); // 🔹 Remove vínculos antigos
+        this.projetosUsuarios.addAll(novosVinculos);
     }
+
 
 
 
@@ -93,7 +105,7 @@ public class Projeto {
     public Projeto(String nome, String descricao, LocalDateTime dataInicio, StatusProjeto status, PrioridadeProjeto prioridade, List<ProjetoUsuario> projetosUsuarios) {
         this.nome = nome;
         this.descricao = descricao;
-        this.dataInicio = dataInicio;
+        this.dataInicio = LocalDate.from(dataInicio);
         this.status = status;
         this.prioridade = prioridade;
         this.projetosUsuarios = projetosUsuarios;
@@ -113,17 +125,17 @@ public class Projeto {
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public LocalDateTime getDataInicio() { return dataInicio; }
-    public void setDataInicio(LocalDateTime dataInicio) { this.dataInicio = dataInicio; }
+    public LocalDate  getDataInicio() { return dataInicio; }
+    public void setDataInicio(LocalDate  dataInicio) { this.dataInicio = dataInicio; }
 
-    public LocalDateTime getDataFim() { return dataFim; }
-    public void setDataFim(LocalDateTime dataFim) { this.dataFim = dataFim; }
+    public LocalDate  getDataFim() { return dataFim; }
+    public void setDataFim(LocalDate  dataFim) { this.dataFim = dataFim; }
 
     public StatusProjeto getStatus() { return status; }
     public void setStatus(StatusProjeto status) {
         this.status = status;
         if (status == StatusProjeto.CONCLUIDO) {
-            this.dataFim = LocalDateTime.now();
+            this.dataFim = LocalDate .now();
         }
     }
 

@@ -115,29 +115,22 @@ public class ProjetoServiceImpl implements ProjetoService {
         projetoExistente.setDataInicio(projetoAtualizado.getDataInicio());
         projetoExistente.setDataFim(projetoAtualizado.getDataFim());
 
-        // 🔹 Remover todos os vínculos antigos antes de salvar novos
+        // 🔹 Carrega os novos usuários e atualiza
+        List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
+        projetoExistente.atualizarUsuarios(usuarios); // ✅ Agora chamamos o método
+
+        // 🔹 Remove vínculos antigos e adiciona novos
         projetoUsuarioRepository.deleteByProjeto(projetoExistente);
-        logger.info("🗑️ Vínculos antigos removidos.");
+        List<ProjetoUsuario> novosVinculos = usuarios.stream()
+                .map(usuario -> new ProjetoUsuario(projetoExistente, usuario))
+                .collect(Collectors.toList());
 
-        // 🔹 Adicionar os novos usuários
-        if (usuariosIds != null && !usuariosIds.isEmpty()) {
-            List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
-
-            List<ProjetoUsuario> novosVinculos = usuarios.stream()
-                    .map(usuario -> new ProjetoUsuario(projetoExistente, usuario))
-                    .collect(Collectors.toList());
-
-            projetoUsuarioRepository.saveAll(novosVinculos); // 🔹 Agora salvamos todos de uma vez
-            logger.info("✅ {} usuários vinculados ao projeto {}", novosVinculos.size(), projetoExistente.getNome());
-        } else {
-            logger.warn("⚠ Nenhum usuário foi vinculado ao projeto.");
-        }
-
-        // 🔹 Garantir que a lista de usuários seja carregada corretamente antes de salvar
-        projetoExistente.setProjetosUsuarios(projetoUsuarioRepository.findByProjetoId(projetoExistente.getId()));
+        projetoUsuarioRepository.saveAll(novosVinculos);
+        logger.info("✅ {} usuários vinculados ao projeto {}", novosVinculos.size(), projetoExistente.getNome());
 
         return projetoRepository.save(projetoExistente);
     }
+
 
 
 

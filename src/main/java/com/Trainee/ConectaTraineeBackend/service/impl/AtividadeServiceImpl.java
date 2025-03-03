@@ -29,31 +29,33 @@ public class AtividadeServiceImpl implements AtividadeService {
 
     @Override
     public Atividade salvarAtividade(Atividade atividade, Set<Long> usuariosIds) {
-        logger.info("Salvando atividade: {}", atividade.getNome());
+        logger.info("🔹 Salvando atividade: {}", atividade.getNome());
 
         if (usuariosIds != null && !usuariosIds.isEmpty()) {
             Set<Usuario> usuarios = new HashSet<>(usuarioRepository.findAllById(usuariosIds));
 
             if (!usuarios.isEmpty()) {
                 atividade.setUsuariosResponsaveis(usuarios);
+                logger.info("✅ {} usuários encontrados e vinculados.", usuarios.size());
             } else {
-                logger.warn("Nenhum usuário encontrado para os IDs: {}", usuariosIds);
-                atividade.setUsuariosResponsaveis(new HashSet<>()); // Garante que não seja nulo
+                logger.warn("⚠ Nenhum usuário encontrado para os IDs: {}", usuariosIds);
+                atividade.setUsuariosResponsaveis(new HashSet<>());
             }
         } else {
-            logger.warn("Nenhum usuário foi passado para a atividade {}", atividade.getNome());
-            atividade.setUsuariosResponsaveis(new HashSet<>()); // Garante que não seja nulo
-        }
-
-
-        // 🔹 Garante que `usuariosResponsaveis` nunca seja null antes de salvar
-        if (atividade.getUsuariosResponsaveis() == null) {
+            logger.warn("⚠ Nenhum usuário foi passado para a atividade {}", atividade.getNome());
             atividade.setUsuariosResponsaveis(new HashSet<>());
         }
 
+        // 🔹 Persistindo a atividade no banco
         Atividade atividadeSalva = atividadeRepository.save(atividade);
 
-        logger.info("Usuários vinculados: {}", atividadeSalva.getUsuariosResponsaveis().size());
+        // 🔍 Verificando se os usuários realmente ficaram vinculados
+        if (atividadeSalva.getUsuariosResponsaveis() != null && !atividadeSalva.getUsuariosResponsaveis().isEmpty()) {
+            atividadeSalva.getUsuariosResponsaveis().forEach(usuario ->
+                    logger.info("✅ Usuário {} vinculado à atividade {}", usuario.getId(), atividade.getNome()));
+        } else {
+            logger.warn("⚠ Nenhum usuário salvo na atividade {}", atividade.getNome());
+        }
 
         return atividadeSalva;
     }

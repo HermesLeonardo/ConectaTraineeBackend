@@ -45,6 +45,7 @@ public class Usuario {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjetoUsuario> projetosUsuarios = new ArrayList<>();
 

@@ -1,7 +1,9 @@
 package com.Trainee.ConectaTraineeBackend.controller;
 
+import com.Trainee.ConectaTraineeBackend.DTO.AtividadeRequest;
 import com.Trainee.ConectaTraineeBackend.enums.StatusAtividade;
 import com.Trainee.ConectaTraineeBackend.model.Atividade;
+import com.Trainee.ConectaTraineeBackend.model.Projeto;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
@@ -10,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -34,12 +37,20 @@ public class AtividadeController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<Atividade>> listarTodos() {
-        logger.info("Listando todas as atividades.");
-        return ResponseEntity.ok(atividadeService.listarTodos());
+        List<Atividade> atividades = atividadeService.listarTodos();
+
+        // 🚀 Log para depuração das datas
+        atividades.forEach(a -> logger.info("Atividade ID: {}, Data Início: {}, Data Fim: {}",
+                a.getId(), a.getDataInicio(), a.getDataFim()));
+
+        return ResponseEntity.ok(atividades);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<Atividade> buscarPorId(@PathVariable Long id) {
         logger.info("Buscando atividade com ID: {}", id);
@@ -51,53 +62,63 @@ public class AtividadeController {
                 });
     }
 
-
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
-    public ResponseEntity<Atividade> criarAtividade(@RequestBody Map<String, Object> payload) {
-        logger.info("Criando nova atividade.");
+    public ResponseEntity<Atividade> criarAtividade(@RequestBody AtividadeRequest atividadeRequest) {
+        logger.info("📥 Recebendo requisição para criar atividade.");
+        logger.info("📥 IDs dos usuários recebidos no backend: {}", atividadeRequest.getUsuariosIds());
 
-        Long idProjeto = ((Number) payload.get("id_projeto")).longValue();
-        String nome = payload.get("nome").toString();
-        String descricao = payload.get("descricao").toString();
-        LocalDateTime dataInicio = LocalDateTime.parse(payload.get("data_inicio").toString());
-        LocalDateTime dataFim = payload.get("data_fim") != null ? LocalDateTime.parse(payload.get("data_fim").toString()) : dataInicio.plusHours(1);
-        StatusAtividade status = StatusAtividade.valueOf(payload.get("status").toString());
-
-        // Convertendo usuariosIds para Set<Long>
-        Set<Long> usuariosIds = new HashSet<>();
-        if (payload.get("usuariosIds") != null) {
-            usuariosIds = ((List<Integer>) payload.get("usuariosIds")).stream().map(Long::valueOf).collect(Collectors.toSet());
-        }
+        Projeto projeto = projetoRepository.findById(atividadeRequest.getId_projeto())
+                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
 
         Atividade atividade = new Atividade();
-        atividade.setProjeto(projetoRepository.findById(idProjeto).orElseThrow(() -> new RuntimeException("Projeto não encontrado")));
-        atividade.setNome(nome);
-        atividade.setDescricao(descricao);
-        atividade.setDataInicio(LocalDate.from(dataInicio));
-        atividade.setDataFim(LocalDate.from(dataFim));
-        atividade.setStatus(status);
+        atividade.setProjeto(projeto);
+        atividade.setNome(atividadeRequest.getNome());
+        atividade.setDescricao(atividadeRequest.getDescricao());
+        atividade.setStatus(StatusAtividade.valueOf(atividadeRequest.getStatus()));
+        atividade.setDataInicio(LocalDate.parse(atividadeRequest.getData_inicio()));
+        atividade.setDataFim(atividadeRequest.getData_fim() != null ? LocalDate.parse(atividadeRequest.getData_fim()) : null);
 
-        // Chama o service passando os usuários
+        // 🛑 Adicionando logs antes de buscar usuários
+        Set<Long> usuariosIds = Optional.ofNullable(atividadeRequest.getUsuariosIds())
+                .orElse(Collections.emptyList())
+                .stream()
+                .collect(Collectors.toSet());
+
+        logger.info("🔍 IDs de usuários recebidos: {}", usuariosIds);
+
+        // 💾 SALVANDO ATIVIDADE COM USUÁRIOS
         atividade = atividadeService.salvarAtividade(atividade, usuariosIds);
+
+        // ✅ Logs para ver os usuários vinculados corretamente
+        if (atividade.getUsuariosResponsaveis() != null && !atividade.getUsuariosResponsaveis().isEmpty()) {
+            Atividade finalAtividade = atividade;
+            atividade.getUsuariosResponsaveis().forEach(usuario ->
+                    logger.info("✅ Usuário {} vinculado à atividade {}", usuario.getId(), finalAtividade.getNome()));
+        } else {
+            logger.warn("⚠ Nenhum usuário foi vinculado à atividade {}", atividade.getNome());
+        }
 
         return ResponseEntity.ok(atividade);
     }
 
 
 
-
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}/usuarios")
     public ResponseEntity<Atividade> adicionarUsuarios(@PathVariable Long id, @RequestBody Set<Usuario> usuarios) {
         logger.info("Adicionando usuários à atividade {}", id);
         return ResponseEntity.ok(atividadeService.adicionarUsuarios(id, usuarios));
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}/usuarios")
     public ResponseEntity<Set<Usuario>> listarUsuarios(@PathVariable Long id) {
         logger.info("Listando usuários da atividade {}", id);
         return ResponseEntity.ok(atividadeService.listarUsuarios(id));
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarAtividade(@PathVariable Long id) {
         logger.info("Deletando atividade com ID: {}", id);
@@ -105,6 +126,7 @@ public class AtividadeController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Atividade> atualizarAtividade(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         logger.info("Atualizando atividade com ID: {}", id);
@@ -117,46 +139,47 @@ public class AtividadeController {
 
         Atividade atividade = atividadeOptional.get();
 
-        if (payload.containsKey("nome")) {
+        // 🚀 **Correção: Verifica se os valores não são nulos antes de acessar**
+        if (payload.containsKey("nome") && payload.get("nome") != null) {
             atividade.setNome(payload.get("nome").toString());
         }
-        if (payload.containsKey("descricao")) {
+        if (payload.containsKey("descricao") && payload.get("descricao") != null) {
             atividade.setDescricao(payload.get("descricao").toString());
         }
-        if (payload.containsKey("status")) {
-            atividade.setStatus(StatusAtividade.valueOf(payload.get("status").toString()));
+        if (payload.containsKey("status") && payload.get("status") != null) {
+            try {
+                atividade.setStatus(StatusAtividade.valueOf(payload.get("status").toString()));
+            } catch (IllegalArgumentException e) {
+                logger.error("Status inválido: {}", payload.get("status"));
+                return ResponseEntity.badRequest().body(null);
+            }
         }
-        if (payload.containsKey("data_inicio")) {
-            atividade.setDataInicio(LocalDate.parse(payload.get("data_inicio").toString())); // 🔹 Correção
+        if (payload.containsKey("data_inicio") && payload.get("data_inicio") != null) {
+            atividade.setDataInicio(LocalDate.parse(payload.get("data_inicio").toString()));
         }
-        if (payload.containsKey("data_fim")) {
-            atividade.setDataFim(LocalDate.parse(payload.get("data_fim").toString())); // 🔹 Correção
+        if (payload.containsKey("data_fim") && payload.get("data_fim") != null) {
+            atividade.setDataFim(LocalDate.parse(payload.get("data_fim").toString()));
         }
-        if (payload.containsKey("id_projeto")) {
+        if (payload.containsKey("id_projeto") && payload.get("id_projeto") != null) {
             Long idProjeto = ((Number) payload.get("id_projeto")).longValue();
-            atividade.setProjeto(projetoRepository.findById(idProjeto).orElseThrow(() -> new RuntimeException("Projeto não encontrado")));
+            atividade.setProjeto(projetoRepository.findById(idProjeto)
+                    .orElseThrow(() -> new RuntimeException("Projeto não encontrado")));
         }
 
-        if (payload.containsKey("usuariosIds")) {
+        if (payload.containsKey("usuariosIds") && payload.get("usuariosIds") != null) {
             Set<Long> usuariosIds = new HashSet<>();
-            if (payload.get("usuariosIds") != null) {
-                usuariosIds = ((List<Integer>) payload.get("usuariosIds")).stream().map(Long::valueOf).collect(Collectors.toSet());
-            }
+            usuariosIds = ((List<Integer>) payload.get("usuariosIds")).stream().map(Long::valueOf).collect(Collectors.toSet());
 
-            // 🔹 Buscar os usuários para garantir que são válidos antes de salvar
             Set<Usuario> usuarios = new HashSet<>(usuarioRepository.findAllById(usuariosIds));
-
-            if (!usuarios.isEmpty()) {
-                atividade.setUsuariosResponsaveis(usuarios);
-            } else {
-                logger.warn("Nenhum usuário encontrado para os IDs: {}", usuariosIds);
-                atividade.setUsuariosResponsaveis(new HashSet<>());
-            }
+            atividade.setUsuariosResponsaveis(usuarios);
         }
 
+        // 🚀 **Salva a atividade corrigida**
+        atividade = atividadeService.salvarAtividade(atividade, atividade.getUsuariosResponsaveisIds());
 
         return ResponseEntity.ok(atividade);
     }
+
 
 
 

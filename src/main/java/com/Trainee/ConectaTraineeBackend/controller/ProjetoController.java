@@ -62,7 +62,7 @@ public class ProjetoController {
     }
 
 
-
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarProjeto(@PathVariable Long id) {
         logger.info("Deletando projeto com ID: {}", id);
@@ -74,12 +74,34 @@ public class ProjetoController {
     @PutMapping("/{id}")
     public ResponseEntity<Projeto> atualizarProjeto(
             @PathVariable Long id,
-            @RequestBody ProjetoRequest request) {
+            @RequestBody(required = false) ProjetoRequest request) {
+        if (request == null || request.getProjeto() == null) {
+            logger.error("❌ ERRO: O objeto 'ProjetoRequest' está NULL!");
+            return ResponseEntity.badRequest().build();
+        }
+
         logger.info("🔄 Recebida requisição para atualizar projeto: {}", request.getProjeto().getNome());
 
         Projeto projetoAtualizado = projetoService.atualizarProjeto(id, request.getProjeto(), request.getUsuariosIds());
         return ResponseEntity.ok(projetoAtualizado);
     }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/{id}/usuarios")
+    public ResponseEntity<List<Usuario>> listarUsuariosDoProjeto(@PathVariable Long id) {
+        logger.info("🔍 Buscando usuários vinculados ao projeto ID: {}", id);
+
+        Optional<Projeto> projetoOpt = projetoService.buscarPorId(id);
+
+        if (projetoOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Usuario> usuarios = projetoOpt.get().getUsuarios();
+        return ResponseEntity.ok(usuarios);
+    }
+
+
 
 
 }
