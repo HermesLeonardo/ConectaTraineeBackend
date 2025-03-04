@@ -41,8 +41,8 @@ public class LancamentoHorasServiceImpl implements LancamentoHorasService {
 
     @Override
     public List<LancamentoHoras> listarTodos() {
-        logger.info("Listando todos os lançamentos de horas.");
-        return lancamentoHorasRepository.findAll();
+        logger.info("Listando todos os lançamentos de horas ATIVOS.");
+        return lancamentoHorasRepository.findByCanceladoFalse();
     }
 
     @Override
@@ -50,4 +50,12 @@ public class LancamentoHorasServiceImpl implements LancamentoHorasService {
         logger.info("Deletando lançamento de horas com ID: {}", id);
         lancamentoHorasRepository.deleteById(id);
     }
+
+    @Override
+    public List<LancamentoHoras> buscarLancamentosPorUsuario(Long usuarioId) {
+        logger.info("📄 Buscando lançamentos ativos do usuário ID: {}", usuarioId);
+        return lancamentoHorasRepository.buscarLancamentosAtivosPorUsuario(usuarioId);
+    }
+
+
 }

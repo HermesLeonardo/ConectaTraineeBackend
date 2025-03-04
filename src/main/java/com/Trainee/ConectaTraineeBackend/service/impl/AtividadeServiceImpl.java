@@ -33,24 +33,16 @@ public class AtividadeServiceImpl implements AtividadeService {
 
         if (usuariosIds != null && !usuariosIds.isEmpty()) {
             Set<Usuario> usuarios = new HashSet<>(usuarioRepository.findAllById(usuariosIds));
-
-            if (!usuarios.isEmpty()) {
-                atividade.setUsuariosResponsaveis(usuarios);
-                logger.info("✅ {} usuários encontrados e vinculados.", usuarios.size());
-            } else {
-                logger.warn("⚠ Nenhum usuário encontrado para os IDs: {}", usuariosIds);
-                atividade.setUsuariosResponsaveis(new HashSet<>());
-            }
+            atividade.setUsuariosResponsaveis(usuarios);
+            logger.info("✅ {} usuários encontrados e vinculados.", usuarios.size());
         } else {
             logger.warn("⚠ Nenhum usuário foi passado para a atividade {}", atividade.getNome());
             atividade.setUsuariosResponsaveis(new HashSet<>());
         }
 
-        // 🔹 Persistindo a atividade no banco
         Atividade atividadeSalva = atividadeRepository.save(atividade);
 
-        // 🔍 Verificando se os usuários realmente ficaram vinculados
-        if (atividadeSalva.getUsuariosResponsaveis() != null && !atividadeSalva.getUsuariosResponsaveis().isEmpty()) {
+        if (!atividadeSalva.getUsuariosResponsaveis().isEmpty()) {
             atividadeSalva.getUsuariosResponsaveis().forEach(usuario ->
                     logger.info("✅ Usuário {} vinculado à atividade {}", usuario.getId(), atividade.getNome()));
         } else {
@@ -59,6 +51,7 @@ public class AtividadeServiceImpl implements AtividadeService {
 
         return atividadeSalva;
     }
+
 
 
 

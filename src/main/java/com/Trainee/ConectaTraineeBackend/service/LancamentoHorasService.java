@@ -10,4 +10,6 @@ public interface LancamentoHorasService {
     Optional<LancamentoHoras> buscarPorId(Long id);
     List<LancamentoHoras> listarTodos();
     void deletarLancamento(Long id);
+
+    List<LancamentoHoras> buscarLancamentosPorUsuario(Long usuarioId);
 }

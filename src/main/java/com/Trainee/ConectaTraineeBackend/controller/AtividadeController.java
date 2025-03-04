@@ -5,14 +5,17 @@ import com.Trainee.ConectaTraineeBackend.enums.StatusAtividade;
 import com.Trainee.ConectaTraineeBackend.model.Atividade;
 import com.Trainee.ConectaTraineeBackend.model.Projeto;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
+import com.Trainee.ConectaTraineeBackend.repository.AtividadeRepository;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.service.AtividadeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -37,6 +40,9 @@ public class AtividadeController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private AtividadeRepository atividadeRepository;
+
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
@@ -54,13 +60,20 @@ public class AtividadeController {
     @GetMapping("/{id}")
     public ResponseEntity<Atividade> buscarPorId(@PathVariable Long id) {
         logger.info("Buscando atividade com ID: {}", id);
-        Optional<Atividade> atividade = atividadeService.buscarPorId(id);
-        return atividade.map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    logger.warn("Atividade com ID {} não encontrada.", id);
-                    return ResponseEntity.notFound().build();
-                });
+        Optional<Atividade> atividadeOpt = atividadeService.buscarPorId(id);
+
+        if (atividadeOpt.isEmpty()) {
+            logger.warn("Atividade com ID {} não encontrada.", id);
+            return ResponseEntity.notFound().build();
+        }
+
+        Atividade atividade = atividadeOpt.get();
+        Set<Usuario> usuarios = atividadeService.listarUsuarios(id);
+        atividade.setUsuariosResponsaveis(usuarios);
+
+        return ResponseEntity.ok(atividade);
     }
+
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
@@ -179,6 +192,33 @@ public class AtividadeController {
 
         return ResponseEntity.ok(atividade);
     }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/usuario-logado")
+    public ResponseEntity<List<Atividade>> listarAtividadesUsuarioLogado() {
+        logger.info("➡️ Requisição recebida para listar atividades do usuário logado.");
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        logger.info("🔑 Extraindo email do usuário autenticado: {}", email);
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+
+        if (usuarioOpt.isEmpty()) {
+            logger.warn("⚠️ Nenhum usuário encontrado com o email: {}", email);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        logger.info("✅ Usuário autenticado: ID={}, Email={}", usuario.getId(), usuario.getEmail());
+
+        List<Atividade> atividades = atividadeRepository.buscarAtividadesDoUsuario(usuario.getId());
+
+        logger.info("📌 {} atividades encontradas para o usuário {}", atividades.size(), usuario.getEmail());
+
+        return ResponseEntity.ok(atividades);
+    }
+
+
 
 
 

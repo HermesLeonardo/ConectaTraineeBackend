@@ -17,5 +17,10 @@ public interface AtividadeRepository extends JpaRepository<Atividade, Long> {
     @Query("SELECT a FROM Atividade a LEFT JOIN FETCH a.usuariosResponsaveis WHERE a.id = :id")
     Optional<Atividade> findByIdWithUsuarios(@Param("id") Long id);
 
+    @Query("SELECT a FROM Atividade a " +
+            "JOIN a.usuariosResponsaveis u " +
+            "WHERE u.id = :idUsuario")
+    List<Atividade> buscarAtividadesDoUsuario(@Param("idUsuario") Long idUsuario);
+
 
 }

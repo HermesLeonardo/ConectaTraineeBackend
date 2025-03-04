@@ -31,6 +31,9 @@ public class LancamentoHoras {
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataRegistro = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private boolean cancelado = false;
+
     // Construtor vazio (necessário para o JPA)
     public LancamentoHoras() {}
 
@@ -43,6 +46,7 @@ public class LancamentoHoras {
         this.dataInicio = dataInicio;
         this.dataFim = dataFim;
         this.dataRegistro = LocalDateTime.now();
+        this.cancelado = false;
     }
 
 
@@ -95,4 +99,8 @@ public class LancamentoHoras {
     public LocalDateTime getDataRegistro() {
         return dataRegistro;
     }
+
+    public boolean isCancelado() {return cancelado;}
+
+    public void setCancelado(boolean cancelado) {this.cancelado = cancelado;}
 }

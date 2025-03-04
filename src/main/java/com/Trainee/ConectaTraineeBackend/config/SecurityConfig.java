@@ -39,24 +39,32 @@ public class SecurityConfig {
                         // 🔹 Permitir login e registro sem autenticação
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
 
-                        // 🔹 Apenas ADMIN pode criar projetos, usuários e atividades
+                        // 🔹 Apenas ADMIN pode criar projetos e atividades
                         .requestMatchers(HttpMethod.POST, "/api/projetos").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/atividades").hasAuthority("ROLE_ADMIN")
 
-                        // 🔹 Apenas ADMIN pode deletar ou atualizar usuários
+                        // 🔹 Apenas ADMIN pode deletar ou atualizar usuários, projetos e atividades
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
-
-                        // 🔹 Apenas ADMIN pode deletar ou atualizar projetos
                         .requestMatchers(HttpMethod.DELETE, "/api/projetos/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/projetos/**").hasAuthority("ROLE_ADMIN")
-
-                        // 🔹 Apenas ADMIN pode deletar ou atualizar atividades
                         .requestMatchers(HttpMethod.DELETE, "/api/atividades/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/atividades/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/atividades").authenticated()
 
+                        // 🔹 Permitir que usuários (ROLE_USER) possam criar lançamentos de horas
+                        .requestMatchers(HttpMethod.POST, "/api/lancamentos-horas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+
+                        // 🔹 Permitir que usuários possam visualizar atividades e projetos vinculados
+                        .requestMatchers(HttpMethod.GET, "/api/atividades/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/projetos").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/atividades/usuario-logado").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+
+
+
+                        // 🔹 Permitir que usuários atualizem seus próprios lançamentos
+                        .requestMatchers(HttpMethod.PUT, "/api/lancamentos-horas/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers("/api/lancamentos-horas/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
                         // 🔹 Permitir requisições OPTIONS (CORS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
