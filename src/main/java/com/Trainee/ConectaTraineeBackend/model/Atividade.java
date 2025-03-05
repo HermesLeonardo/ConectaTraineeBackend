@@ -2,6 +2,7 @@ package com.Trainee.ConectaTraineeBackend.model;
 
 import com.Trainee.ConectaTraineeBackend.enums.StatusAtividade;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,7 +24,7 @@ public class Atividade {
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
-    @JsonBackReference
+    @JsonManagedReference
     private Projeto projeto;
 
     @NotNull(message = "Nome da atividade é obrigatório")

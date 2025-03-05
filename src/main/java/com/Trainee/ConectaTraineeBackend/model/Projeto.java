@@ -2,6 +2,7 @@ package com.Trainee.ConectaTraineeBackend.model;
 
 import com.Trainee.ConectaTraineeBackend.enums.PrioridadeProjeto;
 import com.Trainee.ConectaTraineeBackend.enums.StatusProjeto;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -142,10 +143,20 @@ public class Projeto {
     public PrioridadeProjeto getPrioridade() { return prioridade; }
     public void setPrioridade(PrioridadeProjeto prioridade) { this.prioridade = prioridade; }
     public LocalDateTime getDataCriacao() { return dataCriacao; }
+    public void setIdUsuarioResponsavel(List<Long> usuariosIds) {}
 
-    public void setIdUsuarioResponsavel(List<Long> usuariosIds) {
+    @OneToMany(mappedBy = "projeto", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonBackReference
+    private List<Atividade> atividades = new ArrayList<>();
 
+    public List<Atividade> getAtividades() {
+        return atividades;
+    }
+
+    public void setAtividades(List<Atividade> atividades) {
+        this.atividades = atividades;
     }
 
 
-    }
+
+}

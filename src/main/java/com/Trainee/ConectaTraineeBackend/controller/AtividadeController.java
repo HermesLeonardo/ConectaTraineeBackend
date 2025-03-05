@@ -68,10 +68,10 @@ public class AtividadeController {
         }
 
         Atividade atividade = atividadeOpt.get();
-        Set<Usuario> usuarios = atividadeService.listarUsuarios(id);
-        atividade.setUsuariosResponsaveis(usuarios);
-
+        atividade.setProjeto(projetoRepository.findById(atividade.getProjeto().getId())
+                .orElse(null));
         return ResponseEntity.ok(atividade);
+
     }
 
 
