@@ -6,6 +6,14 @@ import java.util.List;
 
 public class ProjetoRequest {
     private Projeto projeto;
+    private String nome;
+    private String descricao;
+    private String dataInicio;
+    private String dataFim;
+    private String status;
+    private String prioridade;
+
+
     private List<Long> usuariosIds;
 
     public Projeto getProjeto() {

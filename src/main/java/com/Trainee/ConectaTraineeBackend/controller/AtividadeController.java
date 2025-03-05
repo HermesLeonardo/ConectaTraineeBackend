@@ -79,7 +79,12 @@ public class AtividadeController {
     @PostMapping
     public ResponseEntity<Atividade> criarAtividade(@RequestBody AtividadeRequest atividadeRequest) {
         logger.info("📥 Recebendo requisição para criar atividade.");
-        logger.info("📥 IDs dos usuários recebidos no backend: {}", atividadeRequest.getUsuariosIds());
+        logger.info("📥 JSON recebido no backend: {}", atividadeRequest);
+        logger.info("🔑 Token recebido: {}", SecurityContextHolder.getContext().getAuthentication());
+
+        // 🚀 Logs para depuração das datas antes da conversão
+        logger.info("🔍 Data de Início recebida: {}", atividadeRequest.getData_inicio());
+        logger.info("🔍 Data de Fim recebida: {}", atividadeRequest.getData_fim());
 
         Projeto projeto = projetoRepository.findById(atividadeRequest.getId_projeto())
                 .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
@@ -89,8 +94,22 @@ public class AtividadeController {
         atividade.setNome(atividadeRequest.getNome());
         atividade.setDescricao(atividadeRequest.getDescricao());
         atividade.setStatus(StatusAtividade.valueOf(atividadeRequest.getStatus()));
-        atividade.setDataInicio(LocalDate.parse(atividadeRequest.getData_inicio()));
-        atividade.setDataFim(atividadeRequest.getData_fim() != null ? LocalDate.parse(atividadeRequest.getData_fim()) : null);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        atividade.setDataInicio(
+                (atividadeRequest.getData_inicio() != null && !atividadeRequest.getData_inicio().isEmpty()) ?
+                        LocalDate.parse(atividadeRequest.getData_inicio()) : null
+        );
+
+        atividade.setDataFim(
+                (atividadeRequest.getData_fim() != null && !atividadeRequest.getData_fim().isEmpty()) ?
+                        LocalDate.parse(atividadeRequest.getData_fim()) : null
+        );
+
+
+        // 🚀 Logs para confirmar valores após a conversão
+        logger.info("✅ Data de Início após conversão: {}", atividade.getDataInicio());
+        logger.info("✅ Data de Fim após conversão: {}", atividade.getDataFim());
 
         // 🛑 Adicionando logs antes de buscar usuários
         Set<Long> usuariosIds = Optional.ofNullable(atividadeRequest.getUsuariosIds())
@@ -100,20 +119,19 @@ public class AtividadeController {
 
         logger.info("🔍 IDs de usuários recebidos: {}", usuariosIds);
 
-        // 💾 SALVANDO ATIVIDADE COM USUÁRIOS
         atividade = atividadeService.salvarAtividade(atividade, usuariosIds);
 
-        // ✅ Logs para ver os usuários vinculados corretamente
         if (atividade.getUsuariosResponsaveis() != null && !atividade.getUsuariosResponsaveis().isEmpty()) {
-            Atividade finalAtividade = atividade;
             atividade.getUsuariosResponsaveis().forEach(usuario ->
-                    logger.info("✅ Usuário {} vinculado à atividade {}", usuario.getId(), finalAtividade.getNome()));
+                    logger.info("✅ Usuário {} vinculado à atividade {}", usuario.getId()));
         } else {
             logger.warn("⚠ Nenhum usuário foi vinculado à atividade {}", atividade.getNome());
         }
 
         return ResponseEntity.ok(atividade);
     }
+
+
 
 
 

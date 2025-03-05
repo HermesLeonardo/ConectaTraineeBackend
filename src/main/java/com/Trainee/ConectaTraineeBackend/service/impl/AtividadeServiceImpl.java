@@ -8,6 +8,7 @@ import com.Trainee.ConectaTraineeBackend.service.AtividadeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -30,6 +31,8 @@ public class AtividadeServiceImpl implements AtividadeService {
     @Override
     public Atividade salvarAtividade(Atividade atividade, Set<Long> usuariosIds) {
         logger.info("🔹 Salvando atividade: {}", atividade.getNome());
+        logger.info("🔑 Token recebido: {}", SecurityContextHolder.getContext().getAuthentication());
+
 
         if (usuariosIds != null && !usuariosIds.isEmpty()) {
             Set<Usuario> usuarios = new HashSet<>(usuarioRepository.findAllById(usuariosIds));

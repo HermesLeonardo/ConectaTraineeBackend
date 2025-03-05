@@ -146,7 +146,7 @@ public class Projeto {
     public void setIdUsuarioResponsavel(List<Long> usuariosIds) {}
 
     @OneToMany(mappedBy = "projeto", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonBackReference
+    @JsonIgnore
     private List<Atividade> atividades = new ArrayList<>();
 
     public List<Atividade> getAtividades() {

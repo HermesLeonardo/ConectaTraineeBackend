@@ -40,7 +40,6 @@ public class ProjetoController {
         return ResponseEntity.ok(projetos);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Projeto> criarProjeto(@RequestBody ProjetoRequest request) {
         logger.info("🟢 Criando novo projeto: {}", request.getProjeto().getNome());
