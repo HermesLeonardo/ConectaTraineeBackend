@@ -63,13 +63,14 @@ public class Atividade {
 
     public Atividade() {}
 
-    public Atividade(Projeto projeto, String nome, String descricao, StatusAtividade status, LocalDate dataInicio) {
+    public Atividade(Projeto projeto, String nome, String descricao, StatusAtividade status, LocalDate dataInicio, LocalDate dataFim) {
         this.projeto = projeto;
         this.nome = nome;
         this.descricao = descricao;
         this.status = status;
         this.dataCriacao = LocalDateTime.now();
         this.dataInicio = dataInicio; // Corrigido
+        this.dataFim = dataFim;
     }
 
     public Long getId() { return id; }
