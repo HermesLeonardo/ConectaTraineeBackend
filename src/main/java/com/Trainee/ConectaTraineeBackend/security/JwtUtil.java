@@ -21,15 +21,17 @@ public class JwtUtil {
         this.SECRET_KEY = Keys.hmacShaKeyFor(Base64.getEncoder().encode(secret.getBytes()));
     }
 
-    // ✅ Gerar Token JWT
-    public String generateToken(String username) {
+    // ✅ Modificado para incluir o ID no token
+    public String generateToken(String username, Long userId) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("id", userId) // 🔹 Adiciona o ID do usuário no token
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 horas de validade
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     // Extrair usuário do token
     public String extractUsername(String token) {

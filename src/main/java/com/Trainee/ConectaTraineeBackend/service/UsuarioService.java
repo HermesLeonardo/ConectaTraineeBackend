@@ -19,4 +19,6 @@ public interface UsuarioService {
     void desativarUsuario(Long id);
 
     boolean temVinculacoes(Long id);
+
+    Optional<Usuario> buscarPorEmail(String email);
 }

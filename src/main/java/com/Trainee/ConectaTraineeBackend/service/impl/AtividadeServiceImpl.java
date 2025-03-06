@@ -123,5 +123,13 @@ public class AtividadeServiceImpl implements AtividadeService {
                 new HashSet<>();
     }
 
+    @Override
+    public List<Atividade> buscarAtividadesPorUsuario(Long idUsuario) {
+        logger.info("🔍 Buscando atividades vinculadas ao usuário ID: {}", idUsuario);
+        return atividadeRepository.findAtividadesByUsuario(idUsuario);
+    }
+
+
+
 
 }

@@ -3,6 +3,7 @@ package com.Trainee.ConectaTraineeBackend.controller.auth;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.security.JwtUtil;
+import com.Trainee.ConectaTraineeBackend.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,14 +23,18 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository;
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final AuthService authService
+            ;
 
     public AuthController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService,
-                          UsuarioRepository usuarioRepository, JwtUtil jwtUtil, BCryptPasswordEncoder passwordEncoder) {
+                          UsuarioRepository usuarioRepository, JwtUtil jwtUtil, BCryptPasswordEncoder passwordEncoder, AuthService authService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.usuarioRepository = usuarioRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.authService = authService;
+
 
         // Criar ADMIN automaticamente, se não existir
         criarAdminSeNecessario();
@@ -75,13 +80,14 @@ public class AuthController {
             return ResponseEntity.status(401).body("Senha incorreta");
         }
 
-        // 🏷 Gerar token JWT para o usuário autenticado
-        String token = jwtUtil.generateToken(usuario.getEmail());
+        // 🏷 Gerar token JWT para o usuário autenticado (inclui ID)
+        String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getId());
 
         return ResponseEntity.ok(Map.of(
                 "token", token,
+                "id", usuario.getId(), // ✅ Retorna o ID do usuário
                 "user", usuario.getEmail(),
-                "role", "ROLE_" + usuario.getPerfil()  // Corrigido para retornar "ROLE_ADMIN"
+                "role", "ROLE_" + usuario.getPerfil() // Corrigido para retornar "ROLE_ADMIN"
         ));
     }
 

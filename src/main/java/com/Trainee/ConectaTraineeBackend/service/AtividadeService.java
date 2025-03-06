@@ -20,5 +20,8 @@ public interface AtividadeService {
     Atividade removerUsuario(Long id, Long idUsuario);
 
     Set<Usuario> listarUsuarios(Long id);
+
+    List<Atividade> buscarAtividadesPorUsuario(Long idUsuario);
+
 }
 

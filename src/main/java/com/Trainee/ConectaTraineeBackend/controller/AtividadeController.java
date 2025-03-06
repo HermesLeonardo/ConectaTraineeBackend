@@ -231,14 +231,14 @@ public class AtividadeController {
 
         List<Atividade> atividades = atividadeRepository.buscarAtividadesDoUsuario(usuario.getId());
 
-        logger.info("📌 {} atividades encontradas para o usuário {}", atividades.size(), usuario.getEmail());
+        if (atividades.isEmpty()) {
+            logger.warn("⚠ Nenhuma atividade encontrada para o usuário {}.", usuario.getEmail());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(Collections.emptyList());
+        }
 
+        logger.info("📌 {} atividades encontradas para o usuário {}", atividades.size(), usuario.getEmail());
         return ResponseEntity.ok(atividades);
     }
-
-
-
-
 
 
 
