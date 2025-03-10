@@ -33,9 +33,32 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override
     @Transactional
     public Projeto salvarProjeto(Projeto projeto, List<Long> usuariosIds) {
+        return salvarProjeto(projeto, usuariosIds, null); // Chama a nova versão do método sem definir responsável
+    }
+
+
+    @Override
+    @Transactional
+    public Projeto salvarProjeto(Projeto projeto, List<Long> usuariosIds, Long idUsuarioResponsavel) {
         logger.info("💾 Salvando projeto: {}", projeto.getNome());
 
-        // Salva o projeto (caso seja um novo ou uma edição)
+        // 🔹 Se foi passado um ID de responsável, buscamos e verificamos se ele é ADMIN
+        if (idUsuarioResponsavel != null) {
+            Usuario usuarioResponsavel = usuarioRepository.findById(idUsuarioResponsavel)
+                    .orElseThrow(() -> new RuntimeException("Usuário responsável não encontrado"));
+
+            if (!"ADMIN".equals(usuarioResponsavel.getPerfil())) {
+                throw new RuntimeException("Somente usuários ADMIN podem ser responsáveis por projetos!");
+            }
+
+            projeto.setUsuarioResponsavel(usuarioResponsavel); // ✅ Define corretamente o responsável
+            logger.info("✅ Usuário responsável atribuído: {} (ID: {})", usuarioResponsavel.getNome(), usuarioResponsavel.getId());
+        } else {
+            projeto.setUsuarioResponsavel(null); // ✅ Evita inconsistências ao remover o responsável
+            logger.warn("⚠ Nenhum usuário responsável foi atribuído!");
+        }
+
+        // 🔹 Salva o projeto no banco
         Projeto projetoSalvo = projetoRepository.save(projeto);
         logger.info("✅ Projeto salvo no banco com ID {}", projetoSalvo.getId());
 
@@ -56,8 +79,18 @@ public class ProjetoServiceImpl implements ProjetoService {
             logger.warn("⚠ Nenhum usuário foi vinculado ao projeto.");
         }
 
+        // 🔹 Garante que o usuário responsável seja salvo corretamente no banco
+        projetoSalvo = projetoRepository.findById(projetoSalvo.getId()).orElse(projetoSalvo);
+        if (projetoSalvo.getUsuarioResponsavel() != null) {
+            logger.info("📌 ID do usuário responsável salvo corretamente: {}", projetoSalvo.getUsuarioResponsavel().getId());
+        } else {
+            logger.warn("⚠ O usuário responsável ainda está NULL após a persistência!");
+        }
+
         return projetoSalvo;
     }
+
+
 
 
     @Override
@@ -101,13 +134,14 @@ public class ProjetoServiceImpl implements ProjetoService {
 
     @Override
     @Transactional
-    public Projeto atualizarProjeto(Long id, Projeto projetoAtualizado, List<Long> usuariosIds) {
+    public Projeto atualizarProjeto(Long id, Projeto projetoAtualizado, List<Long> usuariosIds, Long responsavelId) {
         logger.info("📝 Atualizando projeto com ID {}", id);
 
+        // 🔹 Verifica se o projeto existe no banco de dados
         Projeto projetoExistente = projetoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
 
-        // Atualiza os atributos do projeto
+        // 🔹 Atualiza os atributos principais do projeto
         projetoExistente.setNome(projetoAtualizado.getNome());
         projetoExistente.setDescricao(projetoAtualizado.getDescricao());
         projetoExistente.setStatus(projetoAtualizado.getStatus());
@@ -115,22 +149,52 @@ public class ProjetoServiceImpl implements ProjetoService {
         projetoExistente.setDataInicio(projetoAtualizado.getDataInicio());
         projetoExistente.setDataFim(projetoAtualizado.getDataFim());
 
-        // 🔹 Carrega os novos usuários e atualiza
-        List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
-        projetoExistente.atualizarUsuarios(usuarios); // ✅ Agora chamamos o método
+        // 🔹 Atualiza o usuário responsável pelo projeto (caso tenha sido fornecido)
+        if (responsavelId != null) {
+            Usuario usuarioResponsavel = usuarioRepository.findById(responsavelId)
+                    .orElseThrow(() -> new RuntimeException("Usuário responsável não encontrado"));
 
-        // 🔹 Remove vínculos antigos e adiciona novos
-        projetoUsuarioRepository.deleteByProjeto(projetoExistente);
-        List<ProjetoUsuario> novosVinculos = usuarios.stream()
-                .map(usuario -> new ProjetoUsuario(projetoExistente, usuario))
-                .collect(Collectors.toList());
+            if (!"ADMIN".equals(usuarioResponsavel.getPerfil())) {
+                throw new RuntimeException("Somente usuários ADMIN podem ser responsáveis por projetos!");
+            }
 
-        projetoUsuarioRepository.saveAll(novosVinculos);
-        logger.info("✅ {} usuários vinculados ao projeto {}", novosVinculos.size(), projetoExistente.getNome());
+            projetoExistente.setUsuarioResponsavel(usuarioResponsavel);
+            logger.info("✅ Usuário responsável atualizado para: {} (ID: {})", usuarioResponsavel.getNome(), usuarioResponsavel.getId());
+        } else {
+            projetoExistente.setUsuarioResponsavel(null);
+            logger.warn("⚠ Nenhum usuário responsável foi definido!");
+        }
 
-        return projetoRepository.save(projetoExistente);
+        // 🔹 Atualiza os usuários vinculados ao projeto
+        if (usuariosIds != null && !usuariosIds.isEmpty()) {
+            List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
+            projetoExistente.atualizarUsuarios(usuarios); // ✅ Atualiza os usuários vinculados
+
+            // 🔹 Remove vínculos antigos e adiciona os novos
+            projetoUsuarioRepository.deleteByProjeto(projetoExistente);
+            List<ProjetoUsuario> novosVinculos = usuarios.stream()
+                    .map(usuario -> new ProjetoUsuario(projetoExistente, usuario))
+                    .collect(Collectors.toList());
+
+            projetoUsuarioRepository.saveAll(novosVinculos);
+            logger.info("✅ {} usuários vinculados ao projeto {}", novosVinculos.size(), projetoExistente.getNome());
+        } else {
+            logger.warn("⚠ Nenhum usuário foi vinculado ao projeto.");
+        }
+
+        // 🔹 Salva as alterações no banco de dados
+        projetoRepository.save(projetoExistente);
+
+        // 🔹 Verificação final para garantir que o responsável foi persistido corretamente
+        if (projetoExistente.getUsuarioResponsavel() != null) {
+            logger.info("📌 Confirmação final do usuário responsável salvo: {}",
+                    projetoExistente.getUsuarioResponsavel().getId());
+        } else {
+            logger.warn("⚠ O usuário responsável ainda está NULL após a persistência!");
+        }
+
+        return projetoExistente;
     }
-
 
 
 

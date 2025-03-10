@@ -4,11 +4,16 @@ import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.security.JwtUtil;
 import com.Trainee.ConectaTraineeBackend.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.security.SecuritySchemes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+
 
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +21,16 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*") // Permite requisições de qualquer origem (Postman, Frontend, etc.)
+
+
+@SecuritySchemes({
+        @SecurityScheme(
+                name = "BearerAuth",
+                type = SecuritySchemeType.HTTP,
+                scheme = "bearer",
+                bearerFormat = "JWT"
+        )
+})
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -23,8 +38,7 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository;
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final AuthService authService
-            ;
+    private final AuthService authService;
 
     public AuthController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService,
                           UsuarioRepository usuarioRepository, JwtUtil jwtUtil, BCryptPasswordEncoder passwordEncoder, AuthService authService) {
@@ -62,6 +76,8 @@ public class AuthController {
 
 
     @PostMapping("/login")
+    @Operation(summary = "Autentica o usuário e retorna um token JWT")
+
     public ResponseEntity<?> authenticateUser(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("email");
         String senha = loginRequest.get("senha");

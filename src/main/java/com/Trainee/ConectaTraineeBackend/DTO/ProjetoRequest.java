@@ -12,6 +12,29 @@ public class ProjetoRequest {
     private String dataFim;
     private String status;
     private String prioridade;
+    private List<Long> usuariosResponsaveisIds;
+    private Long responsavelId;
+
+
+
+    public Long getResponsavelId() {
+        return responsavelId;
+    }
+
+    public void setResponsavelId(Long responsavelId) {
+        this.responsavelId = responsavelId;
+    }
+
+
+    public List<Long> getUsuariosResponsaveisIds() {
+        return usuariosResponsaveisIds;
+    }
+
+    public void setUsuariosResponsaveisIds(List<Long> usuariosResponsaveisIds) {
+        this.usuariosResponsaveisIds = usuariosResponsaveisIds;
+    }
+
+
 
 
     private List<Long> usuariosIds;
@@ -31,4 +54,20 @@ public class ProjetoRequest {
     public void setUsuariosIds(List<Long> usuariosIds) {
         this.usuariosIds = usuariosIds;
     }
+
+
+
+
+    private Long idUsuarioResponsavel; // Novo campo para receber o ID do ADMIN responsável
+
+    public Long getIdUsuarioResponsavel() {
+        return idUsuarioResponsavel;
+    }
+
+    public void setIdUsuarioResponsavel(Long idUsuarioResponsavel) {
+        this.idUsuarioResponsavel = idUsuarioResponsavel;
+    }
+
+
+
 }

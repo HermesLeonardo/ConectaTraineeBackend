@@ -36,6 +36,9 @@ public class SecurityConfig {
                 .cors().and()
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // 🔹 Permite Swagger
+
                         // 🔹 Permitir login e registro sem autenticação
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
 

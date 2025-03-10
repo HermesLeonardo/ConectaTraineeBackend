@@ -2,7 +2,6 @@
 CREATE DATABASE IF NOT EXISTS sistema_gerenciamento CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE sistema_gerenciamento;
 
-drop schema sistema_gerenciamento;
 
 -- Criar tabela usuarios
 CREATE TABLE IF NOT EXISTS usuarios (

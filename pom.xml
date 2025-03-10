@@ -41,7 +41,16 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-				<!-- Dependência correta para JWT -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+
+
+
+
+		<!-- Dependência correta para JWT -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>

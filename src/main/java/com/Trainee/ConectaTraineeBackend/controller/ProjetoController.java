@@ -44,10 +44,16 @@ public class ProjetoController {
     public ResponseEntity<Projeto> criarProjeto(@RequestBody ProjetoRequest request) {
         logger.info("🟢 Criando novo projeto: {}", request.getProjeto().getNome());
 
-        Projeto novoProjeto = projetoService.salvarProjeto(request.getProjeto(), request.getUsuariosIds());
+        Projeto novoProjeto = projetoService.salvarProjeto(
+                request.getProjeto(),
+                request.getUsuariosIds(),
+                request.getIdUsuarioResponsavel() // 🔹 Passamos o ID do ADMIN
+        );
 
         return ResponseEntity.ok(novoProjeto);
+
     }
+
 
 
     @Autowired
@@ -69,7 +75,6 @@ public class ProjetoController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Projeto> atualizarProjeto(
             @PathVariable Long id,
@@ -81,9 +86,16 @@ public class ProjetoController {
 
         logger.info("🔄 Recebida requisição para atualizar projeto: {}", request.getProjeto().getNome());
 
-        Projeto projetoAtualizado = projetoService.atualizarProjeto(id, request.getProjeto(), request.getUsuariosIds());
+        Projeto projetoAtualizado = projetoService.atualizarProjeto(
+                id,
+                request.getProjeto(),
+                request.getUsuariosResponsaveisIds(),
+                request.getResponsavelId()
+        );
+
         return ResponseEntity.ok(projetoAtualizado);
     }
+
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}/usuarios")
@@ -99,6 +111,27 @@ public class ProjetoController {
         List<Usuario> usuarios = projetoOpt.get().getUsuarios();
         return ResponseEntity.ok(usuarios);
     }
+
+    @PutMapping("/{id}/responsavel")
+    public ResponseEntity<Projeto> atualizarResponsavel(@PathVariable Long id, @RequestBody Long idNovoResponsavel) {
+        logger.info("🔄 Atualizando responsável pelo projeto ID {}", id);
+
+        Projeto projeto = projetoService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+
+        Usuario novoResponsavel = usuarioRepository.findById(idNovoResponsavel)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (!"ADMIN".equals(novoResponsavel.getPerfil())) {
+            return ResponseEntity.badRequest().body(projeto);
+        }
+
+        projeto.setUsuarioResponsavel(novoResponsavel);
+        projetoService.salvarProjeto(projeto, null, idNovoResponsavel);
+
+        return ResponseEntity.ok(projeto);
+    }
+
 
 
 
