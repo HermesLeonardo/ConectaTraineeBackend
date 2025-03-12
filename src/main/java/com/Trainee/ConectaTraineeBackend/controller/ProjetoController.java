@@ -5,14 +5,17 @@ import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
+import com.Trainee.ConectaTraineeBackend.service.LancamentoHorasService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,8 +30,6 @@ public class ProjetoController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProjetoController.class);
 
-    @Autowired
-    private ProjetoService projetoService;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -139,7 +140,48 @@ public class ProjetoController {
 
 
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/usuario-logado")
+    public ResponseEntity<List<Projeto>> listarProjetosUsuarioLogado() {
+        logger.info("➡️ Requisição recebida para listar projetos do usuário logado.");
 
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        logger.info("🔑 Extraindo email do usuário autenticado: {}", email);
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        if (usuarioOpt.isEmpty()) {
+            logger.warn("⚠️ Nenhum usuário encontrado com o email: {}", email);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        logger.info("✅ Usuário autenticado: ID={}, Email={}, Perfil={}", usuario.getId(), usuario.getEmail(), usuario.getPerfil());
+
+        List<Projeto> projetos;
+        if (usuario.getPerfil().equals("ADMIN")) {
+            projetos = projetoService.listarTodos(); // 🔹 Admin pode ver todos os projetos
+        } else {
+            projetos = projetoService.listarProjetosDoUsuario(usuario.getId()); // 🔹 Usuário comum só vê seus projetos
+        }
+
+        if (projetos.isEmpty()) {
+            logger.warn("⚠ Nenhum projeto encontrado para o usuário {}.", usuario.getEmail());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(Collections.emptyList());
+        }
+
+        logger.info("📌 {} projetos encontrados para o usuário {}", projetos.size(), usuario.getEmail());
+        return ResponseEntity.ok(projetos);
+    }
+
+
+    @Autowired
+    private ProjetoService projetoService;
+
+    @GetMapping("/total-horas-lancadas")
+    public ResponseEntity<Double> obterTotalHorasLancadas() {
+        double totalHoras = projetoService.calcularTotalHorasLancadas();
+        return ResponseEntity.ok(totalHoras);
+    }
 
 }
 

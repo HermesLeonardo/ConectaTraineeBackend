@@ -170,7 +170,6 @@ public class AtividadeController {
 
         Atividade atividade = atividadeOptional.get();
 
-        // 🚀 **Correção: Verifica se os valores não são nulos antes de acessar**
         if (payload.containsKey("nome") && payload.get("nome") != null) {
             atividade.setNome(payload.get("nome").toString());
         }
@@ -239,6 +238,23 @@ public class AtividadeController {
         logger.info("📌 {} atividades encontradas para o usuário {}", atividades.size(), usuario.getEmail());
         return ResponseEntity.ok(atividades);
     }
+
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/{id}/usuarios-responsaveis")
+    public ResponseEntity<Set<Usuario>> listarUsuariosDaAtividade(@PathVariable Long id) {
+        logger.info("🔍 Buscando usuários vinculados à atividade ID: {}", id);
+
+        Optional<Atividade> atividadeOpt = atividadeService.buscarPorId(id);
+
+        if (atividadeOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Set<Usuario> usuarios = atividadeOpt.get().getUsuariosResponsaveis();
+        return ResponseEntity.ok(usuarios);
+    }
+
 
 
 

@@ -2,10 +2,8 @@ package com.Trainee.ConectaTraineeBackend.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.security.*;
 import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.security.SecurityScheme.In;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,7 +18,6 @@ public class SwaggerConfig {
                         .version("1.0")
                         .description("Documentação da API do Conecta Trainee")
                 )
-                // 🔥 Define o esquema de segurança para o Bearer Token
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("BearerAuth",
@@ -29,14 +26,20 @@ public class SwaggerConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .in(In.HEADER)
+                                        .in(SecurityScheme.In.HEADER)
                         )
-                        // 🔥 Adiciona um esquema específico para login
-                        .addSecuritySchemes("LoginAuth",
+                        .addSecuritySchemes("OAuth2",
                                 new SecurityScheme()
-                                        .name("LoginAuth")
-                                        .type(SecurityScheme.Type.APIKEY)
-                                        .in(In.HEADER)
+                                        .type(SecurityScheme.Type.OAUTH2)
+                                        .flows(new OAuthFlows()
+                                                .password(new OAuthFlow()
+                                                        .tokenUrl("http://localhost:8080/api/auth/login")
+                                                        .scopes(new Scopes()
+                                                                .addString("read", "Acesso de leitura")
+                                                                .addString("write", "Acesso de escrita")
+                                                        )
+                                                )
+                                        )
                         )
                 );
     }

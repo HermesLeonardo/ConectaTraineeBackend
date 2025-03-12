@@ -6,6 +6,8 @@ import java.util.Optional;
 
 public interface ProjetoService {
 
+    List<Projeto> listarProjetosDoUsuario(Long usuarioId);
+
     Projeto salvarProjeto(Projeto projeto, List<Long> usuariosIds); // Método original
     Projeto salvarProjeto(Projeto projeto, List<Long> usuariosIds, Long idUsuarioResponsavel); // Suporte ao responsável
 
@@ -16,4 +18,8 @@ public interface ProjetoService {
 
     void deletarProjeto(Long id);
     Optional<Projeto> buscarProjetoComUsuarios(Long id);
+
+    double calcularTotalHorasLancadas();
+
+
 }

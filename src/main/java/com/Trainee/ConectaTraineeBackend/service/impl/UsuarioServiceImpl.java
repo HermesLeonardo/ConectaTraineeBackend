@@ -112,18 +112,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public Optional<Usuario> buscarPorEmail(String email) {
-        logger.info("🔍 Buscando usuário pelo email: {}", email);
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-
-        if (usuarioOpt.isPresent()) {
-            logger.info("✅ Usuário encontrado: {}", usuarioOpt.get().getEmail());
-        } else {
-            logger.warn("⚠ Usuário não encontrado para o email: {}", email);
-        }
-
-        return usuarioOpt;
+        return usuarioRepository.findByEmail(email);
     }
+
 
     @Override
     public List<Usuario> listarAtivos() {

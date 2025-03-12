@@ -37,9 +37,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // 🔹 Permite Swagger
-
+                        // 🔹 Permitir acesso ao Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         // 🔹 Permitir login e registro sem autenticação
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/auth/**").permitAll() // 🔥 Permitir requisições OPTIONS (CORS)
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
 
                         // 🔹 Apenas ADMIN pode criar projetos e atividades
@@ -59,9 +66,10 @@ public class SecurityConfig {
 
                         // 🔹 Permitir que usuários possam visualizar atividades e projetos vinculados
                         .requestMatchers(HttpMethod.GET, "/api/atividades/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/projetos").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/projetos/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
                         .requestMatchers(HttpMethod.GET, "/api/atividades/usuario-logado").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas/total-horas-lancadas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
 
 

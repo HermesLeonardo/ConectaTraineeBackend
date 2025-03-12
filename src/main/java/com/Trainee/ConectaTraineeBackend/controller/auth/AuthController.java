@@ -75,15 +75,28 @@ public class AuthController {
 
 
 
-    @PostMapping("/login")
+    @PostMapping(value = "/login", consumes = {"application/json", "application/x-www-form-urlencoded"})
     @Operation(summary = "Autentica o usuário e retorna um token JWT")
+    public ResponseEntity<?> authenticateUser(
+            @RequestBody(required = false) Map<String, String> loginRequest,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String password) {
 
-    public ResponseEntity<?> authenticateUser(@RequestBody Map<String, String> loginRequest) {
-        String email = loginRequest.get("email");
-        String senha = loginRequest.get("senha");
+        // 🔥 Se os dados vierem como JSON, usa loginRequest
+        if (loginRequest != null) {
+            username = loginRequest.get("email");
+            password = loginRequest.get("senha");
+        }
+
+
+
+        // 🔥 Se os dados vierem como form-urlencoded, já estão nas variáveis username e password
+        if (username == null || password == null) {
+            return ResponseEntity.status(400).body("Email e senha são obrigatórios.");
+        }
 
         // 🔍 Buscar o usuário no banco
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
 
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(401).body("Usuário não encontrado");
@@ -92,7 +105,7 @@ public class AuthController {
         Usuario usuario = usuarioOpt.get();
 
         // Comparar senha digitada com senha criptografada no banco
-        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+        if (!passwordEncoder.matches(password, usuario.getSenha())) {
             return ResponseEntity.status(401).body("Senha incorreta");
         }
 
@@ -106,6 +119,9 @@ public class AuthController {
                 "role", "ROLE_" + usuario.getPerfil() // Corrigido para retornar "ROLE_ADMIN"
         ));
     }
+
+
+
 
 
     private void criarAdminSeNecessario() {

@@ -1,8 +1,10 @@
 package com.Trainee.ConectaTraineeBackend.service.impl;
 
+import com.Trainee.ConectaTraineeBackend.model.LancamentoHoras;
 import com.Trainee.ConectaTraineeBackend.model.Projeto;
 import com.Trainee.ConectaTraineeBackend.model.ProjetoUsuario;
 import com.Trainee.ConectaTraineeBackend.model.Usuario;
+import com.Trainee.ConectaTraineeBackend.repository.LancamentoHorasRepository;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
 import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +35,20 @@ public class ProjetoServiceImpl implements ProjetoService {
 
     @Autowired
     private ProjetoUsuarioRepository projetoUsuarioRepository;
+
+    @Autowired
+    private LancamentoHorasRepository lancamentoHorasRepository;
+
+
+    @Autowired
+    public ProjetoServiceImpl(ProjetoRepository projetoRepository) {
+        this.projetoRepository = projetoRepository;
+    }
+
+    @Override
+    public List<Projeto> listarProjetosDoUsuario(Long usuarioId) {
+        return projetoRepository.buscarProjetosDoUsuario(usuarioId);
+    }
 
     @Override
     @Transactional
@@ -74,13 +91,14 @@ public class ProjetoServiceImpl implements ProjetoService {
             List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
 
             for (Usuario usuario : usuarios) {
-                ProjetoUsuario projetoUsuario = new ProjetoUsuario(projetoSalvo, usuario);
+                ProjetoUsuario projetoUsuario = new ProjetoUsuario(projeto, usuario);
                 projetoUsuarioRepository.save(projetoUsuario);
-                logger.info("✅ Usuário {} vinculado ao projeto {}", usuario.getNome(), projetoSalvo.getNome());
+                logger.info("✅ Usuário {} vinculado ao projeto {}", usuario.getNome(), projeto.getNome());
             }
         } else {
             logger.warn("⚠ Nenhum usuário foi vinculado ao projeto.");
         }
+
 
         // 🔹 Garante que o usuário responsável seja salvo corretamente no banco
         projetoSalvo = projetoRepository.findById(projetoSalvo.getId()).orElse(projetoSalvo);
@@ -192,6 +210,20 @@ public class ProjetoServiceImpl implements ProjetoService {
 
 
 
+    @Override
+    public double calcularTotalHorasLancadas() {
+        List<LancamentoHoras> lancamentos = lancamentoHorasRepository.findAll();
+
+        return lancamentos.stream()
+                .mapToDouble(lanc -> {
+                    if (lanc.getDataInicio() == null || lanc.getDataFim() == null) {
+                        return 0; // Evita erro se os dados estiverem incompletos
+                    }
+                    Duration duracao = Duration.between(lanc.getDataInicio(), lanc.getDataFim());
+                    return duracao.toHours(); // Converte a duração para horas
+                })
+                .sum();
+    }
 
 
 

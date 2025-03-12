@@ -11,9 +11,14 @@ import com.Trainee.ConectaTraineeBackend.service.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -91,8 +96,6 @@ public class LancamentoHorasServiceImpl implements LancamentoHorasService {
     }
 
 
-
-
     @Override
     public Optional<LancamentoHoras> buscarPorId(Long id) {
         logger.info("Buscando lançamento de horas com ID: {}", id);
@@ -113,9 +116,9 @@ public class LancamentoHorasServiceImpl implements LancamentoHorasService {
 
     @Override
     public List<LancamentoHoras> buscarLancamentosPorUsuario(Long usuarioId) {
-        logger.info("📄 Buscando lançamentos ativos do usuário ID: {}", usuarioId);
-        return lancamentoHorasRepository.buscarLancamentosAtivosPorUsuario(usuarioId);
+        return List.of();
     }
+
 
     @Override
     public LancamentoHoras atualizarLancamento(LancamentoHoras lancamento) {
@@ -128,6 +131,58 @@ public class LancamentoHorasServiceImpl implements LancamentoHorasService {
         logger.info("✅ Salvando lançamento de horas...");
         return lancamentoHorasRepository.save(lancamento);
     }
+
+    @Override
+    public double calcularTotalHorasLancadas() {
+        // Obtém o email do usuário logado
+        String emailUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(emailUsuario);
+
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Usuário não encontrado.");
+        }
+
+        Usuario usuario = usuarioOpt.get();
+
+        List<LancamentoHoras> lancamentos;
+
+        // 🔹 Se for ADMIN, retorna todos os lançamentos
+        if ("ADMIN".equals(usuario.getPerfil())) {
+            lancamentos = lancamentoHorasRepository.findAll();
+        } else {
+            // 🔹 Se for usuário comum, retorna apenas os lançamentos dele
+            lancamentos = lancamentoHorasRepository.findByUsuarioId(usuario.getId());
+        }
+
+        // 🔹 Correção: Converter duração corretamente para frações de hora
+        return lancamentos.stream()
+                .mapToDouble(lanc -> {
+                    if (lanc.getDataInicio() == null || lanc.getDataFim() == null) {
+                        return 0; // Evita erro se algum registro estiver incompleto
+                    }
+                    Duration duracao = Duration.between(lanc.getDataInicio(), lanc.getDataFim());
+                    return duracao.toMinutes() / 60.0; // ✅ Converte minutos para fração de horas corretamente
+                })
+                .sum();
+    }
+
+
+    @Override
+    public List<LancamentoHoras> buscarUltimosLancamentos(int limite) {
+        Pageable pageable = PageRequest.of(0, limite);
+        return lancamentoHorasRepository.findAll(pageable).getContent(); // Apenas para testar
+    }
+
+
+    @Override
+    public List<LancamentoHoras> buscarUltimosLancamentosPorUsuario(Long usuarioId, int limite) {
+        if (limite <= 0) {
+            limite = 5; // Define um valor padrão para evitar erro
+        }
+        Pageable pageable = PageRequest.of(0, limite);
+        return lancamentoHorasRepository.buscarUltimosLancamentosPorUsuario(usuarioId, pageable).getContent();
+    }
+
 
 
 }

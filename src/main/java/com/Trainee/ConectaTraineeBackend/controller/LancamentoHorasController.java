@@ -9,6 +9,7 @@ import com.Trainee.ConectaTraineeBackend.service.AtividadeService;
 import com.Trainee.ConectaTraineeBackend.service.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +28,6 @@ public class LancamentoHorasController {
 
     private static final Logger logger = LoggerFactory.getLogger(LancamentoHorasController.class);
 
-    private final LancamentoHorasService lancamentoHorasService;
     private final AtividadeService atividadeService;
     private final UsuarioService usuarioService;
 
@@ -99,6 +99,17 @@ public class LancamentoHorasController {
             return ResponseEntity.badRequest().build();
         }
 
+    }
+
+    @Autowired
+    private LancamentoHorasService lancamentoHorasService;
+
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/total-horas-lancadas")
+    public ResponseEntity<Double> obterTotalHorasLancadas() {
+        double totalHoras = lancamentoHorasService.calcularTotalHorasLancadas();
+        return ResponseEntity.ok(totalHoras);
     }
 
 
@@ -174,4 +185,31 @@ public class LancamentoHorasController {
         logger.info("📌 {} atividades encontradas para o usuário {}", atividades.size(), usuario.getEmail());
         return ResponseEntity.ok(atividades);
     }
+
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/ultimos-lancamentos")
+    public ResponseEntity<List<LancamentoHoras>> obterUltimosLancamentos(
+            @RequestParam(value = "limite", defaultValue = "5") int limite) {
+
+        String emailUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(emailUsuario);
+
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        List<LancamentoHoras> ultimosLancamentos;
+
+        if ("ADMIN".equals(usuario.getPerfil())) {
+            ultimosLancamentos = lancamentoHorasService.buscarUltimosLancamentos(limite);
+        } else {
+            ultimosLancamentos = lancamentoHorasService.buscarUltimosLancamentosPorUsuario(usuario.getId(), limite);
+        }
+
+        return ResponseEntity.ok(ultimosLancamentos);
+    }
+
+
 }
