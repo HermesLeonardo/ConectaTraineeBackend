@@ -28,6 +28,13 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarios);
     }
 
+    @GetMapping("/desativados")
+    public ResponseEntity<List<Usuario>> listarDesativados() {
+        logger.info("Listando usuários desativados.");
+        List<Usuario> usuarios = usuarioService.listarDesativados();
+        return ResponseEntity.ok(usuarios);
+    }
+
     @PostMapping
     public ResponseEntity<Usuario> criarUsuario(@RequestBody Usuario usuario) {
         logger.info("Recebida requisição para criar usuário com email: {}", usuario.getEmail());
@@ -71,5 +78,36 @@ public ResponseEntity<Set<Atividade>> listarAtividades(@PathVariable Long id) {
         boolean temVinculacoes = usuarioService.temVinculacoes(id);
         return ResponseEntity.ok(temVinculacoes);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Usuario> atualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuario) {
+        logger.info("Requisição recebida para atualizar usuário com ID: {}", id);
+
+        // verifica existência do usuário antes de atualizar
+        Optional<Usuario> usuarioExistente = usuarioService.buscarPorId(id);
+        if (usuarioExistente.isPresent()) {
+            Usuario usuarioAtualizar = usuarioExistente.get();
+
+            // Atualize os campos necessários
+            usuarioAtualizar.setNome(usuario.getNome());
+            usuarioAtualizar.setEmail(usuario.getEmail());
+            usuarioAtualizar.setPerfil(usuario.getPerfil());
+            usuarioAtualizar.setAtivo(usuario.isAtivo());
+
+            // Se senha for enviada, atualize também
+            if (usuario.getSenha() != null && !usuario.getSenha().isEmpty()) {
+                usuarioAtualizar.setSenha(usuario.getSenha());
+            }
+
+            Usuario usuarioSalvo = usuarioService.salvarUsuario(usuarioAtualizar);
+            logger.info("✅ Usuário com ID: {} atualizado com sucesso.", usuarioSalvo.getId());
+
+            return ResponseEntity.ok(usuarioSalvo);
+        } else {
+            logger.warn("❌ Usuário com ID: {} não encontrado para atualização.", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
 }

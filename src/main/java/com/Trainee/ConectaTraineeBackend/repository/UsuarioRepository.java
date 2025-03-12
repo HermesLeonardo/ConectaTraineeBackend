@@ -13,4 +13,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByPerfil(String admin);
 
     List<Usuario> findAllById(Iterable<Long> ids);
+
+    List<Usuario> findByAtivoTrue();
+    List<Usuario> findByAtivoFalse();
 }

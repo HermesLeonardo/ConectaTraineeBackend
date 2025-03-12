@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -75,22 +76,26 @@ public class ProjetoController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Projeto> atualizarProjeto(
             @PathVariable Long id,
             @RequestBody(required = false) ProjetoRequest request) {
+
         if (request == null || request.getProjeto() == null) {
             logger.error("❌ ERRO: O objeto 'ProjetoRequest' está NULL!");
             return ResponseEntity.badRequest().build();
         }
-
+        logger.info("🔄 Recebida requisição para atualizar projeto ID {} pelo usuário {}", id, SecurityContextHolder.getContext().getAuthentication().getName());
         logger.info("🔄 Recebida requisição para atualizar projeto: {}", request.getProjeto().getNome());
+        logger.info("📢 JSON recebido na atualização: {}", request);
 
         Projeto projetoAtualizado = projetoService.atualizarProjeto(
                 id,
                 request.getProjeto(),
-                request.getUsuariosResponsaveisIds(),
-                request.getResponsavelId()
+                request.getUsuariosIds(),
+                request.getIdUsuarioResponsavel()
         );
 
         return ResponseEntity.ok(projetoAtualizado);

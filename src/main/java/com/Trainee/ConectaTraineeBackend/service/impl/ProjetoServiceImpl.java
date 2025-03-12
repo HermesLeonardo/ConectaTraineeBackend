@@ -12,8 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -135,65 +138,56 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override
     @Transactional
     public Projeto atualizarProjeto(Long id, Projeto projetoAtualizado, List<Long> usuariosIds, Long responsavelId) {
-        logger.info("📝 Atualizando projeto com ID {}", id);
+        logger.info("📝 Atualizando projeto ID: {}", id);
 
-        // 🔹 Verifica se o projeto existe no banco de dados
-        Projeto projetoExistente = projetoRepository.findById(id)
+        Projeto projeto = projetoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
 
-        // 🔹 Atualiza os atributos principais do projeto
-        projetoExistente.setNome(projetoAtualizado.getNome());
-        projetoExistente.setDescricao(projetoAtualizado.getDescricao());
-        projetoExistente.setStatus(projetoAtualizado.getStatus());
-        projetoExistente.setPrioridade(projetoAtualizado.getPrioridade());
-        projetoExistente.setDataInicio(projetoAtualizado.getDataInicio());
-        projetoExistente.setDataFim(projetoAtualizado.getDataFim());
+        // 🔹 Atualiza os atributos básicos
+        projeto.setNome(projetoAtualizado.getNome());
+        projeto.setDescricao(projetoAtualizado.getDescricao());
+        projeto.setStatus(projetoAtualizado.getStatus());
+        projeto.setPrioridade(projetoAtualizado.getPrioridade());
+        projeto.setDataInicio(projetoAtualizado.getDataInicio());
+        projeto.setDataFim(projetoAtualizado.getDataFim());
 
-        // 🔹 Atualiza o usuário responsável pelo projeto (caso tenha sido fornecido)
+        // 🔹 Remove todos os vínculos antigos antes de salvar os novos
+        projetoUsuarioRepository.deleteByProjetoId(projeto.getId());
+
+        // 🔹 Atualiza o usuário responsável
         if (responsavelId != null) {
-            Usuario usuarioResponsavel = usuarioRepository.findById(responsavelId)
+            Usuario responsavel = usuarioRepository.findById(responsavelId)
                     .orElseThrow(() -> new RuntimeException("Usuário responsável não encontrado"));
 
-            if (!"ADMIN".equals(usuarioResponsavel.getPerfil())) {
+            if (!"ADMIN".equals(responsavel.getPerfil())) {
                 throw new RuntimeException("Somente usuários ADMIN podem ser responsáveis por projetos!");
             }
 
-            projetoExistente.setUsuarioResponsavel(usuarioResponsavel);
-            logger.info("✅ Usuário responsável atualizado para: {} (ID: {})", usuarioResponsavel.getNome(), usuarioResponsavel.getId());
+            projeto.setUsuarioResponsavel(responsavel);
+            logger.info("✅ Responsável atualizado: {} (ID: {})", responsavel.getNome(), responsavel.getId());
         } else {
-            projetoExistente.setUsuarioResponsavel(null);
-            logger.warn("⚠ Nenhum usuário responsável foi definido!");
+            projeto.setUsuarioResponsavel(null);
+            logger.warn("⚠ Nenhum usuário responsável foi definido.");
         }
 
         // 🔹 Atualiza os usuários vinculados ao projeto
         if (usuariosIds != null && !usuariosIds.isEmpty()) {
             List<Usuario> usuarios = usuarioRepository.findAllById(usuariosIds);
-            projetoExistente.atualizarUsuarios(usuarios); // ✅ Atualiza os usuários vinculados
 
-            // 🔹 Remove vínculos antigos e adiciona os novos
-            projetoUsuarioRepository.deleteByProjeto(projetoExistente);
+            // ✅ Remove duplicatas
+            Set<Long> usuariosExistentes = new HashSet<>(projetoUsuarioRepository.findUsuariosIdsByProjetoId(projeto.getId()));
             List<ProjetoUsuario> novosVinculos = usuarios.stream()
-                    .map(usuario -> new ProjetoUsuario(projetoExistente, usuario))
+                    .filter(usuario -> !usuariosExistentes.contains(usuario.getId()))
+                    .map(usuario -> new ProjetoUsuario(projeto, usuario))
                     .collect(Collectors.toList());
 
             projetoUsuarioRepository.saveAll(novosVinculos);
-            logger.info("✅ {} usuários vinculados ao projeto {}", novosVinculos.size(), projetoExistente.getNome());
+            logger.info("✅ {} usuários vinculados ao projeto {}", novosVinculos.size(), projeto.getNome());
         } else {
             logger.warn("⚠ Nenhum usuário foi vinculado ao projeto.");
         }
 
-        // 🔹 Salva as alterações no banco de dados
-        projetoRepository.save(projetoExistente);
-
-        // 🔹 Verificação final para garantir que o responsável foi persistido corretamente
-        if (projetoExistente.getUsuarioResponsavel() != null) {
-            logger.info("📌 Confirmação final do usuário responsável salvo: {}",
-                    projetoExistente.getUsuarioResponsavel().getId());
-        } else {
-            logger.warn("⚠ O usuário responsável ainda está NULL após a persistência!");
-        }
-
-        return projetoExistente;
+        return projetoRepository.save(projeto);
     }
 
 

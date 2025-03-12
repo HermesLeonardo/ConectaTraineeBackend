@@ -21,4 +21,8 @@ public interface UsuarioService {
     boolean temVinculacoes(Long id);
 
     Optional<Usuario> buscarPorEmail(String email);
+
+    List<Usuario> listarAtivos();
+    List<Usuario> listarDesativados();
+
 }

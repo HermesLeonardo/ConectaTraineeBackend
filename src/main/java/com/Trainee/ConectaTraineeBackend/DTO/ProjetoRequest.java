@@ -1,8 +1,12 @@
 package com.Trainee.ConectaTraineeBackend.DTO;
 
 import com.Trainee.ConectaTraineeBackend.model.Projeto;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ProjetoRequest {
     private Projeto projeto;
@@ -13,31 +17,21 @@ public class ProjetoRequest {
     private String status;
     private String prioridade;
     private List<Long> usuariosResponsaveisIds;
-    private Long responsavelId;
+    private List<Long> usuariosIds = new ArrayList<>();
+    private Long idUsuarioResponsavel;
 
-
-
-    public Long getResponsavelId() {
-        return responsavelId;
+    public Long getIdUsuarioResponsavel() {
+        return idUsuarioResponsavel;
     }
 
-    public void setResponsavelId(Long responsavelId) {
-        this.responsavelId = responsavelId;
+    @JsonSetter("idUsuarioResponsavel")
+    public void setIdUsuarioResponsavel(Object idUsuarioResponsavel) {
+        if (idUsuarioResponsavel instanceof Number) {
+            this.idUsuarioResponsavel = ((Number) idUsuarioResponsavel).longValue();
+        } else {
+            this.idUsuarioResponsavel = null;
+        }
     }
-
-
-    public List<Long> getUsuariosResponsaveisIds() {
-        return usuariosResponsaveisIds;
-    }
-
-    public void setUsuariosResponsaveisIds(List<Long> usuariosResponsaveisIds) {
-        this.usuariosResponsaveisIds = usuariosResponsaveisIds;
-    }
-
-
-
-
-    private List<Long> usuariosIds;
 
     public Projeto getProjeto() {
         return projeto;
@@ -51,23 +45,26 @@ public class ProjetoRequest {
         return usuariosIds;
     }
 
-    public void setUsuariosIds(List<Long> usuariosIds) {
-        this.usuariosIds = usuariosIds;
+    @JsonSetter("usuariosIds")
+    public void setUsuariosIds(Object usuariosIds) {
+        if (usuariosIds instanceof List) {
+            this.usuariosIds = ((List<?>) usuariosIds).stream()
+                    .filter(Objects::nonNull)
+                    .map(id -> id instanceof Number ? ((Number) id).longValue() : null)
+                    .collect(Collectors.toList());
+        } else if (usuariosIds instanceof Number) {
+            this.usuariosIds = List.of(((Number) usuariosIds).longValue());
+        } else {
+            this.usuariosIds = new ArrayList<>();
+        }
     }
 
 
-
-
-    private Long idUsuarioResponsavel; // Novo campo para receber o ID do ADMIN responsável
-
-    public Long getIdUsuarioResponsavel() {
-        return idUsuarioResponsavel;
+    public List<Long> getUsuariosResponsaveisIds() {
+        return usuariosResponsaveisIds;
     }
 
-    public void setIdUsuarioResponsavel(Long idUsuarioResponsavel) {
-        this.idUsuarioResponsavel = idUsuarioResponsavel;
+    public void setUsuariosResponsaveisIds(List<Long> usuariosResponsaveisIds) {
+        this.usuariosResponsaveisIds = usuariosResponsaveisIds;
     }
-
-
-
 }

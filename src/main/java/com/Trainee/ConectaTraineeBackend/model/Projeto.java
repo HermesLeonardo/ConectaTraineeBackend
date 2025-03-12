@@ -84,15 +84,16 @@ public class Projeto {
 
     public void atualizarUsuarios(List<Usuario> usuarios) {
         if (usuarios == null || usuarios.isEmpty()) {
-            this.projetosUsuarios.clear();
+            this.projetosUsuarios.clear(); // 🔹 Remove vínculos antigos
             return;
         }
 
+        // 🔹 Garante que não há duplicação de vínculos antes de salvar
         List<ProjetoUsuario> novosVinculos = usuarios.stream()
                 .map(usuario -> new ProjetoUsuario(this, usuario))
                 .collect(Collectors.toList());
 
-        this.projetosUsuarios.clear(); // 🔹 Remove vínculos antigos
+        this.projetosUsuarios.clear(); // 🔹 Remove vínculos antigos antes de atualizar
         this.projetosUsuarios.addAll(novosVinculos);
     }
 

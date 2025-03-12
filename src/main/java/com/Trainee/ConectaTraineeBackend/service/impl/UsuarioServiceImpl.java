@@ -125,6 +125,15 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioOpt;
     }
 
+    @Override
+    public List<Usuario> listarAtivos() {
+        return usuarioRepository.findByAtivoTrue();
+    }
+
+    @Override
+    public List<Usuario> listarDesativados() {
+        return usuarioRepository.findByAtivoFalse();
+    }
 
 
     @Override
