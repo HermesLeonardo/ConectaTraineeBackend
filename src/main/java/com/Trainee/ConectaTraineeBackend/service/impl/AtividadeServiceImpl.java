@@ -68,6 +68,7 @@ public class AtividadeServiceImpl implements AtividadeService {
     }
 
 
+
     @Override
     public List<Atividade> listarTodos() {
         logger.info("Listando todas as atividades cadastradas.");

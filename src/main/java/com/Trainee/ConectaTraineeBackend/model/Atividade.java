@@ -116,4 +116,14 @@ public class Atividade {
     public Set<Long> getUsuariosResponsaveisIds() {
         return usuariosResponsaveis.stream().map(Usuario::getId).collect(Collectors.toSet());
     }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+
 }

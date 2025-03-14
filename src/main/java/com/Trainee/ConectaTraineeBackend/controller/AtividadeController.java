@@ -51,14 +51,14 @@ public class AtividadeController {
     public ResponseEntity<List<Atividade>> listarTodos() {
         List<Atividade> atividades = atividadeService.listarTodos();
 
-        // 🚀 Log para depuração das datas
-        atividades.forEach(a -> logger.info("Atividade ID: {}, Data Início: {}, Data Fim: {}",
-                a.getId(), a.getDataInicio(), a.getDataFim()));
+        // Garante que os usuários são carregados antes de retornar
+        atividades.forEach(a -> a.getUsuariosResponsaveis().size());
 
         return ResponseEntity.ok(atividades);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/{id}")
     public ResponseEntity<Atividade> buscarPorId(@PathVariable Long id) {
         logger.info("Buscando atividade com ID: {}", id);
@@ -70,10 +70,13 @@ public class AtividadeController {
         }
 
         Atividade atividade = atividadeOpt.get();
-        atividade.setProjeto(projetoRepository.findById(atividade.getProjeto().getId())
-                .orElse(null));
-        return ResponseEntity.ok(atividade);
 
+        // Garante que o projeto seja carregado corretamente
+        if (atividade.getProjeto() != null) {
+            atividade.setProjeto(projetoRepository.findById(atividade.getProjeto().getId()).orElse(null));
+        }
+
+        return ResponseEntity.ok(atividade);
     }
 
 
@@ -277,6 +280,30 @@ public class AtividadeController {
     }
 
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PutMapping("/{id}/reativar")
+    public ResponseEntity<Map<String, String>> reativarAtividade(@PathVariable Long id) {
+        Optional<Atividade> atividadeOpt = atividadeRepository.findById(id);
+
+        if (atividadeOpt.isPresent()) {
+            Atividade atividade = atividadeOpt.get();
+
+            if (atividade.isAtivo()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "A atividade já está ativa!"));
+            }
+
+            atividade.setAtivo(true);
+            atividadeRepository.save(atividade);
+
+            logger.info("✅ Atividade {} reativada com sucesso!", id);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Atividade reativada com sucesso!");
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Atividade não encontrada"));
+    }
 
 
 
