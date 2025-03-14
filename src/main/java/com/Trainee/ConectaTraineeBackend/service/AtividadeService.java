@@ -23,5 +23,6 @@ public interface AtividadeService {
 
     List<Atividade> buscarAtividadesPorUsuario(Long idUsuario);
 
+    void desativarAtividade(Long id);
 }
 

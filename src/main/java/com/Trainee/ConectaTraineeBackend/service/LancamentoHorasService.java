@@ -18,6 +18,7 @@ public interface LancamentoHorasService {
     List<LancamentoHoras> buscarLancamentosPorUsuario(Long usuarioId);
     LancamentoHoras atualizarLancamento(LancamentoHoras lancamento);
     LancamentoHoras salvarLancamento(LancamentoHoras lancamento);
+    List<LancamentoHoras> buscarLancamentosCancelados();
 
 
     double calcularTotalHorasLancadas();
@@ -26,5 +27,7 @@ public interface LancamentoHorasService {
 
     @Query("SELECT l FROM LancamentoHoras l WHERE l.usuario.id = :usuarioId AND l.cancelado = false ORDER BY l.dataInicio DESC")
     List<LancamentoHoras> buscarUltimosLancamentosPorUsuario(Long usuarioId, int limite);
+
+
 
 }

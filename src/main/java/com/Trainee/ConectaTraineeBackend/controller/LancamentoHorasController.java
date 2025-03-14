@@ -211,5 +211,65 @@ public class LancamentoHorasController {
         return ResponseEntity.ok(ultimosLancamentos);
     }
 
+    @GetMapping("/usuario-logado")
+    public ResponseEntity<List<LancamentoHoras>> listarLancamentosUsuarioLogado() {
+        String emailUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(emailUsuario);
+
+        if (usuarioOpt.isEmpty()) {
+            logger.warn("⚠️ Nenhum usuário encontrado com o email: {}", emailUsuario);
+            return ResponseEntity.status(401).body(List.of());
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        logger.info("✅ Usuário autenticado: ID={}, Email={}", usuario.getId(), usuario.getEmail());
+
+        List<LancamentoHoras> lancamentos = lancamentoHorasService.buscarLancamentosPorUsuario(usuario.getId());
+
+        if (lancamentos.isEmpty()) {
+            logger.warn("⚠ Nenhum lançamento encontrado para o usuário {}.", usuario.getEmail());
+            return ResponseEntity.status(204).body(List.of());
+        }
+
+        logger.info("📌 {} lançamentos encontrados para o usuário {}", lancamentos.size(), usuario.getEmail());
+        return ResponseEntity.ok(lancamentos);
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/cancelados")
+    public ResponseEntity<List<LancamentoHoras>> listarLancamentosCancelados() {
+        logger.info("📌 Buscando lançamentos de horas cancelados");
+
+        List<LancamentoHoras> lancamentosCancelados = lancamentoHorasService.buscarLancamentosCancelados();
+
+        if (lancamentosCancelados.isEmpty()) {
+            logger.warn("⚠ Nenhum lançamento cancelado encontrado.");
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(lancamentosCancelados);
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    @PutMapping("/{id}/restaurar")
+    public ResponseEntity<Void> restaurarLancamento(@PathVariable Long id) {
+        logger.info("♻️ Restaurando lançamento de horas com ID: {}", id);
+
+        Optional<LancamentoHoras> lancamentoOpt = lancamentoHorasService.buscarPorId(id);
+        if (lancamentoOpt.isEmpty()) {
+            logger.warn("⚠ Lançamento não encontrado.");
+            return ResponseEntity.notFound().build();
+        }
+
+        LancamentoHoras lancamento = lancamentoOpt.get();
+        lancamento.setCancelado(false);  // 🔹 Define como não cancelado
+        lancamentoHorasService.atualizarLancamento(lancamento);
+
+        return ResponseEntity.ok().build();
+    }
+
+
 
 }

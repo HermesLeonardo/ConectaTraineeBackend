@@ -12,9 +12,11 @@ import com.Trainee.ConectaTraineeBackend.service.AtividadeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +46,7 @@ public class AtividadeController {
     private AtividadeRepository atividadeRepository;
 
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping
     public ResponseEntity<List<Atividade>> listarTodos() {
         List<Atividade> atividades = atividadeService.listarTodos();
@@ -142,7 +144,7 @@ public class AtividadeController {
         return ResponseEntity.ok(atividadeService.adicionarUsuarios(id, usuarios));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/{id}/usuarios")
     public ResponseEntity<Set<Usuario>> listarUsuarios(@PathVariable Long id) {
         logger.info("Listando usuários da atividade {}", id);
@@ -151,11 +153,12 @@ public class AtividadeController {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarAtividade(@PathVariable Long id) {
-        logger.info("Deletando atividade com ID: {}", id);
+    @CacheEvict(value = "atividades", allEntries = true)
+    public ResponseEntity<?> deletarAtividade(@PathVariable Long id) {
         atividadeService.deletarAtividade(id);
         return ResponseEntity.noContent().build();
     }
+
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
@@ -254,6 +257,26 @@ public class AtividadeController {
         Set<Usuario> usuarios = atividadeOpt.get().getUsuariosResponsaveis();
         return ResponseEntity.ok(usuarios);
     }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PutMapping("/{id}/desativar")
+    public ResponseEntity<Map<String, String>> desativarAtividade(@PathVariable Long id) {
+        Optional<Atividade> atividadeOpt = atividadeRepository.findById(id);
+        if (atividadeOpt.isPresent()) {
+            Atividade atividade = atividadeOpt.get();
+            atividade.setAtivo(false);
+            atividadeRepository.save(atividade);
+
+            logger.info("✅ Atividade {} desativada com sucesso!", id);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Atividade desativada com sucesso!");
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Atividade não encontrada"));
+    }
+
+
 
 
 

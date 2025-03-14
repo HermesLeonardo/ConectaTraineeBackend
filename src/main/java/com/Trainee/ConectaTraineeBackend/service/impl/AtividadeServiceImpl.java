@@ -5,11 +5,13 @@ import com.Trainee.ConectaTraineeBackend.model.Usuario;
 import com.Trainee.ConectaTraineeBackend.repository.AtividadeRepository;
 import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
 import com.Trainee.ConectaTraineeBackend.service.AtividadeService;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -73,15 +75,17 @@ public class AtividadeServiceImpl implements AtividadeService {
     }
 
     @Override
+    @Transactional
     public void deletarAtividade(Long id) {
-        logger.info("Deletando atividade com ID: {}", id);
-        try {
+        if (atividadeRepository.existsById(id)) {
             atividadeRepository.deleteById(id);
-        } catch (Exception e) {
-            logger.error("Erro ao deletar atividade com ID {}: {}", id, e.getMessage());
-            throw new RuntimeException("Erro ao deletar atividade", e);
+            atividadeRepository.flush(); // 🔹 Garante a persistência no banco
+        } else {
+            throw new EntityNotFoundException("Atividade não encontrada para exclusão: ID " + id);
         }
     }
+
+
 
     @Override
     public List<Atividade> buscarPorProjeto(Long idProjeto) {
@@ -128,6 +132,25 @@ public class AtividadeServiceImpl implements AtividadeService {
         logger.info("🔍 Buscando atividades vinculadas ao usuário ID: {}", idUsuario);
         return atividadeRepository.findAtividadesByUsuario(idUsuario);
     }
+
+
+    @Transactional
+    public void desativarAtividade(Long id) {
+        Optional<Atividade> atividade = atividadeRepository.findById(id);
+
+        if (atividade.isPresent()) {
+            Atividade atividadeDesativada = atividade.get();
+            atividadeDesativada.setAtivo(false); // 🔹 Desativando a atividade
+            atividadeRepository.save(atividadeDesativada);
+        } else {
+            throw new EntityNotFoundException("Atividade não encontrada para desativação: ID " + id);
+        }
+    }
+
+    public List<Atividade> listarAtividades() {
+        return atividadeRepository.findByAtivoTrue();
+    }
+
 
 
 

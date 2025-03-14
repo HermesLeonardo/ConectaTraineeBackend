@@ -65,17 +65,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/lancamentos-horas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
                         // 🔹 Permitir que usuários possam visualizar atividades e projetos vinculados
-                        .requestMatchers(HttpMethod.GET, "/api/atividades/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/projetos/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/atividades/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/projetos/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
                         .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
                         .requestMatchers(HttpMethod.GET, "/api/atividades/usuario-logado").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
                         .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas/total-horas-lancadas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
+                        // 🔹 Permitir que usuários visualizem seus lançamentos
+                        .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas/ultimos-lancamentos").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas/total-horas-lancadas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
 
                         // 🔹 Permitir que usuários atualizem seus próprios lançamentos
                         .requestMatchers(HttpMethod.PUT, "/api/lancamentos-horas/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
                         .requestMatchers("/api/lancamentos-horas/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+
+                        .requestMatchers(HttpMethod.GET, "/api/projetos/usuario-logado").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/atividades/usuario-logado").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas/ultimos-lancamentos").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/lancamentos-horas/total-horas-lancadas").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+
 
                         // 🔹 Permitir requisições OPTIONS (CORS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

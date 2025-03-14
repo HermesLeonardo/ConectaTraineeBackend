@@ -34,7 +34,6 @@ public class ProjetoController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<Projeto>> listarTodos() {
         logger.info("Listando todos os projetos.");
@@ -61,7 +60,6 @@ public class ProjetoController {
     @Autowired
     private ProjetoUsuarioRepository projetoUsuarioRepository;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<Projeto> buscarPorId(@PathVariable Long id) {
         Optional<Projeto> projeto = projetoService.buscarProjetoComUsuarios(id);
@@ -69,7 +67,6 @@ public class ProjetoController {
     }
 
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarProjeto(@PathVariable Long id) {
         logger.info("Deletando projeto com ID: {}", id);
@@ -78,7 +75,6 @@ public class ProjetoController {
     }
 
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Projeto> atualizarProjeto(
             @PathVariable Long id,
@@ -103,7 +99,6 @@ public class ProjetoController {
     }
 
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}/usuarios")
     public ResponseEntity<List<Usuario>> listarUsuariosDoProjeto(@PathVariable Long id) {
         logger.info("🔍 Buscando usuários vinculados ao projeto ID: {}", id);
@@ -140,7 +135,6 @@ public class ProjetoController {
 
 
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/usuario-logado")
     public ResponseEntity<List<Projeto>> listarProjetosUsuarioLogado() {
         logger.info("➡️ Requisição recebida para listar projetos do usuário logado.");
@@ -181,6 +175,11 @@ public class ProjetoController {
     public ResponseEntity<Double> obterTotalHorasLancadas() {
         double totalHoras = projetoService.calcularTotalHorasLancadas();
         return ResponseEntity.ok(totalHoras);
+    }
+
+    @GetMapping("/detalhes")
+    public ResponseEntity<List<Projeto>> listarProjetosComDetalhes() {
+        return ResponseEntity.ok(projetoService.listarProjetosComDetalhes());
     }
 
 }

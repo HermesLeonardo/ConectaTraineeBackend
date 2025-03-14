@@ -1,13 +1,8 @@
 package com.Trainee.ConectaTraineeBackend.service.impl;
 
-import com.Trainee.ConectaTraineeBackend.model.LancamentoHoras;
-import com.Trainee.ConectaTraineeBackend.model.Projeto;
-import com.Trainee.ConectaTraineeBackend.model.ProjetoUsuario;
-import com.Trainee.ConectaTraineeBackend.model.Usuario;
-import com.Trainee.ConectaTraineeBackend.repository.LancamentoHorasRepository;
-import com.Trainee.ConectaTraineeBackend.repository.ProjetoRepository;
-import com.Trainee.ConectaTraineeBackend.repository.ProjetoUsuarioRepository;
-import com.Trainee.ConectaTraineeBackend.repository.UsuarioRepository;
+import com.Trainee.ConectaTraineeBackend.DTO.Dtos.ProjetoDTO;
+import com.Trainee.ConectaTraineeBackend.model.*;
+import com.Trainee.ConectaTraineeBackend.repository.*;
 import com.Trainee.ConectaTraineeBackend.service.ProjetoService;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -112,23 +107,32 @@ public class ProjetoServiceImpl implements ProjetoService {
     }
 
 
+    @Autowired
+    private AtividadeRepository atividadeRepository;
 
 
     @Override
     public Optional<Projeto> buscarPorId(Long id) {
-        logger.info("Buscando projeto com ID: {}", id);
-        Optional<Projeto> projetoOpt = projetoRepository.findById(id);
+        logger.info("🔍 Buscando projeto com ID: {}", id);
+
+        // Buscar o projeto com usuários e atividades diretamente
+        Optional<Projeto> projetoOpt = projetoRepository.buscarProjetoComAtividades(id);
 
         if (projetoOpt.isPresent()) {
             Projeto projeto = projetoOpt.get();
 
-            // Buscar os IDs dos usuários responsáveis pelo projeto
+            // Buscar os IDs dos usuários vinculados ao projeto
             List<Long> usuariosIds = projetoUsuarioRepository.findByProjetoId(id)
                     .stream()
                     .map(projetoUsuario -> projetoUsuario.getUsuario().getId())
                     .collect(Collectors.toList());
 
             projeto.setIdUsuarioResponsavel(usuariosIds);
+
+            // Buscar as atividades associadas ao projeto
+            List<Atividade> atividades = atividadeRepository.findByProjetoId(id);
+            projeto.setAtividades(atividades);
+
             return Optional.of(projeto);
         }
 
@@ -223,6 +227,17 @@ public class ProjetoServiceImpl implements ProjetoService {
                     return duracao.toHours(); // Converte a duração para horas
                 })
                 .sum();
+    }
+
+
+    public ProjetoDTO buscarProjetoComUsuariosEAtividades(Long id) {
+        Projeto projeto = projetoRepository.findByIdWithUsersAndActivities(id);
+        return new ProjetoDTO(projeto);
+    }
+
+    @Override
+    public List<Projeto> listarProjetosComDetalhes() {
+        return projetoRepository.findTodosProjetosComDetalhes();
     }
 
 

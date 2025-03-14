@@ -28,7 +28,7 @@ public class AuthService {
             Usuario usuario = usuarioOpt.get();
 
             if (passwordEncoder.matches(senha, usuario.getSenha())) {
-                return jwtUtil.generateToken(usuario.getEmail(), usuario.getId()); // ✅ Agora inclui o ID
+                return jwtUtil.generateToken(usuario.getEmail(), usuario.getId(), usuario.getNome() ); // ✅ Agora inclui o ID
             }
         }
 

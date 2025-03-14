@@ -2,7 +2,6 @@ package com.Trainee.ConectaTraineeBackend.model;
 
 import com.Trainee.ConectaTraineeBackend.enums.PrioridadeProjeto;
 import com.Trainee.ConectaTraineeBackend.enums.StatusProjeto;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,7 +12,9 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
@@ -56,9 +57,10 @@ public class Projeto {
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
 
-    @OneToMany(mappedBy = "projeto", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<ProjetoUsuario> projetosUsuarios = new ArrayList<>();
+    @OneToMany(mappedBy = "projeto", fetch = FetchType.LAZY)
+    private Set<ProjetoUsuario> projetosUsuarios = new HashSet<>();
+
+
 
     @JsonProperty("usuarios")
     public List<Usuario> getUsuarios() {
@@ -73,12 +75,13 @@ public class Projeto {
 
 
 
-    public void setProjetosUsuarios(List<ProjetoUsuario> projetosUsuarios) {
-        this.projetosUsuarios.clear(); // Remove os vínculos antigos para evitar duplicação
+    public void setProjetosUsuarios(Set<ProjetoUsuario> projetosUsuarios) {
+        this.projetosUsuarios.clear();
         if (projetosUsuarios != null) {
             this.projetosUsuarios.addAll(projetosUsuarios);
         }
     }
+
 
 
 
@@ -100,11 +103,11 @@ public class Projeto {
 
 
 
-    public Projeto(List<ProjetoUsuario> projetosUsuarios) {
+    public Projeto(Set<ProjetoUsuario> projetosUsuarios) {
         this.projetosUsuarios = projetosUsuarios;
     }
 
-    public Projeto(String nome, String descricao, LocalDateTime dataInicio, StatusProjeto status, PrioridadeProjeto prioridade, List<ProjetoUsuario> projetosUsuarios) {
+    public Projeto(String nome, String descricao, LocalDateTime dataInicio, StatusProjeto status, PrioridadeProjeto prioridade, Set<ProjetoUsuario> projetosUsuarios) {
         this.nome = nome;
         this.descricao = descricao;
         this.dataInicio = LocalDate.from(dataInicio);
@@ -146,18 +149,24 @@ public class Projeto {
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public void setIdUsuarioResponsavel(List<Long> usuariosIds) {}
 
-    @OneToMany(mappedBy = "projeto", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Atividade> atividades = new ArrayList<>();
+
+
+    @OneToMany(mappedBy = "projeto", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private Set<Atividade> atividades = new HashSet<>();
+
+
 
     public List<Atividade> getAtividades() {
-        return atividades;
+        return new ArrayList<>(atividades); // Convertendo de Set para List
     }
+
 
     public void setAtividades(List<Atividade> atividades) {
-        this.atividades = atividades;
+        this.atividades.clear();
+        if (atividades != null) {
+            this.atividades.addAll(atividades); // Convertendo List para Set corretamente
+        }
     }
-
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_usuario_responsavel", nullable = true)

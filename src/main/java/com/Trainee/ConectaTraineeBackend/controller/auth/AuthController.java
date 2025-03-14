@@ -110,7 +110,7 @@ public class AuthController {
         }
 
         // 🏷 Gerar token JWT para o usuário autenticado (inclui ID)
-        String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getId());
+        String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getId(), usuario.getNome());
 
         return ResponseEntity.ok(Map.of(
                 "token", token,
@@ -136,6 +136,30 @@ public class AuthController {
             System.out.println("Usuário ADMIN criado automaticamente.");
         } else {
             System.out.println("ADMIN já existe. Nenhuma ação necessária.");
+        }
+    }
+
+    private void criarUsuariosPadrãoSeNecessario() {
+        // Lista de usuários padrão a serem criados
+        Usuario[] usuarios = new Usuario[]{
+                new Usuario("João Oliveira", "joao.oliveira@wise.com", "user123", "USER"),
+                new Usuario("Maria Santos", "maria.santos@wise.com", "user123", "USER"),
+                new Usuario("Roberto Lima", "roberto.lima@wise.com", "user123", "USER"),
+                new Usuario("Patrícia Costa", "patricia.costa@wise.com", "user123", "USER"),
+                new Usuario("Rodrigo Quisen", "rodrigo.quisen@wise.com", "admin123", "ADMIN"),
+                new Usuario("Administrador", "admin@wise.com", "admin123", "ADMIN"),
+
+        };
+
+        // Criação dos usuários padrão, se não existirem
+        for (Usuario usuario : usuarios) {
+            if (!usuarioRepository.existsByEmail(usuario.getEmail())) {
+                usuario.setSenha(passwordEncoder.encode(usuario.getSenha())); // Criptografa a senha
+                usuarioRepository.save(usuario);
+                System.out.println("Usuário " + usuario.getNome() + " criado automaticamente.");
+            } else {
+                System.out.println("Usuário " + usuario.getNome() + " já existe. Nenhuma ação necessária.");
+            }
         }
     }
 

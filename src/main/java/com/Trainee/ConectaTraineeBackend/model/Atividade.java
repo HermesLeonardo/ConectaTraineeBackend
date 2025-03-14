@@ -2,6 +2,7 @@ package com.Trainee.ConectaTraineeBackend.model;
 
 import com.Trainee.ConectaTraineeBackend.enums.StatusAtividade;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +26,7 @@ public class Atividade {
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
     @JsonManagedReference
+    @JsonIgnore  // 🔹 Evita recursão infinita
     private Projeto projeto;
 
     @NotNull(message = "Nome da atividade é obrigatório")
@@ -59,6 +61,16 @@ public class Atividade {
     )
     private Set<Usuario> usuariosResponsaveis = new HashSet<>();
 
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    private Boolean ativo = true;
 
 
     public Atividade() {}

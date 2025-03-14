@@ -28,6 +28,7 @@ public interface LancamentoHorasRepository extends JpaRepository<LancamentoHoras
     @Query("SELECT l FROM LancamentoHoras l WHERE l.usuario.id = :usuarioId AND l.cancelado = false ORDER BY l.dataInicio DESC")
     Page<LancamentoHoras> buscarUltimosLancamentosPorUsuario(@Param("usuarioId") Long usuarioId, Pageable pageable);
 
+    List<LancamentoHoras> findByCanceladoTrue();
 
 
 

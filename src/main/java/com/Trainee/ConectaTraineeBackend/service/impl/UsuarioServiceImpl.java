@@ -43,9 +43,17 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
 
+        // Ajusta o perfil antes de salvar
+        if ("ADMIN".equalsIgnoreCase(usuario.getPerfil())) {
+            usuario.setPerfil("ADMIN");
+        } else {
+            usuario.setPerfil("USER"); // Sempre salvar como USER ao invés de USUARIO
+        }
+
         logger.info("✅ Senha tratada e usuário salvo: {}", usuario.getEmail());
         return usuarioRepository.save(usuario);
     }
+
 
 
     @Override

@@ -116,8 +116,10 @@ public class LancamentoHorasServiceImpl implements LancamentoHorasService {
 
     @Override
     public List<LancamentoHoras> buscarLancamentosPorUsuario(Long usuarioId) {
-        return List.of();
+        logger.info("🔍 Buscando lançamentos de horas para o usuário ID: {}", usuarioId);
+        return lancamentoHorasRepository.findByUsuarioId(usuarioId);
     }
+
 
 
     @Override
@@ -183,6 +185,20 @@ public class LancamentoHorasServiceImpl implements LancamentoHorasService {
         return lancamentoHorasRepository.buscarUltimosLancamentosPorUsuario(usuarioId, pageable).getContent();
     }
 
+
+
+    public List<LancamentoHoras> buscarLancamentosCancelados() {
+        return lancamentoHorasRepository.findByCanceladoTrue();
+    }
+
+    public void restaurarLancamento(Long id) {
+        Optional<LancamentoHoras> lancamentoOpt = lancamentoHorasRepository.findById(id);
+        if (lancamentoOpt.isPresent()) {
+            LancamentoHoras lancamento = lancamentoOpt.get();
+            lancamento.setCancelado(false);
+            lancamentoHorasRepository.save(lancamento);
+        }
+    }
 
 
 }
